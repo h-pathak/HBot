@@ -1,0 +1,8 @@
+{
+  "name": "HariomBot",
+  "description": "Personal always-on AI agent workspace with specialized teammates (Atlas, Reactor, Helix, Pulse, Forge) for biotech, research, content, and workspace automation.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
