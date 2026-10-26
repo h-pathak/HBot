@@ -271,3 +271,12 @@ export interface AgentMessage {
   rawScorecard?: VendorScorecardBlock;
   rawBento?: BentoBriefingBlock;
 }
+
+export interface MemoryItem {
+  id: string;
+  category: 'BIOTECH' | 'ACADEMIC' | 'CONTENT' | 'PERSONAL' | 'WORKFLOW';
+  fact: string;
+  confidence: number;
+  source: string;
+  timestamp: string;
+}
