@@ -7,18 +7,18 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CloudDownload
-import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -35,14 +35,16 @@ fun WorkspaceAntigravityScreen(
     onShowSnack: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val theme = LocalCozyTheme.current
+    val clipboardManager = LocalClipboardManager.current
     var dailyIdText by remember(dailyScheduleId) { mutableStateOf(dailyScheduleId) }
     var contentIdText by remember(contentScheduleId) { mutableStateOf(contentScheduleId) }
-    var activeBridgeTab by remember { mutableStateOf("AGENTS") } // "AGENTS", "MEMORY", "SKILLS", "CHANNELS"
+    var activeBridgeTab by remember { mutableStateOf("AGENTS.md") } // "AGENTS.md", "MEMORY.md", "agents.yaml", "skills.yaml"
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Slate900)
+            .background(theme.canvasBg)
             .padding(horizontal = 16.dp, vertical = 10.dp)
             .testTag("workspace_antigravity_screen")
     ) {
@@ -54,30 +56,30 @@ fun WorkspaceAntigravityScreen(
         ) {
             Column {
                 Text(
-                    text = "Workspace & Antigravity Bridge",
+                    text = "Sync & Antigravity Bridge 🔗",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = Slate100,
+                        color = theme.textPrimary,
                         fontSize = 18.sp
                     )
                 )
                 Text(
-                    text = "Google Workspace Sync & GitHub Export",
-                    style = MaterialTheme.typography.labelSmall.copy(color = Cyan400)
+                    text = "Google Workspace & GitHub Antigravity Sync",
+                    style = MaterialTheme.typography.labelSmall.copy(color = theme.accentPrimary)
                 )
             }
 
             Surface(
-                color = Emerald500.copy(alpha = 0.15f),
+                color = ReactorLight,
                 shape = RoundedCornerShape(10.dp)
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(modifier = Modifier.size(6.dp).clip(RoundedCornerShape(3.dp)).background(Emerald400))
+                    Box(modifier = Modifier.size(6.dp).clip(RoundedCornerShape(3.dp)).background(ReactorPrimary))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("OAuth Active", color = Emerald400, fontWeight = FontWeight.Bold, fontSize = 10.sp)
+                    Text("OAuth Connected", color = ReactorDark, fontWeight = FontWeight.Bold, fontSize = 10.sp)
                 }
             }
         }
@@ -94,9 +96,9 @@ fun WorkspaceAntigravityScreen(
             // Google Workspace Connections Section
             item {
                 Text(
-                    text = "GOOGLE WORKSPACE SERVICE CONNECTIONS",
+                    text = "GOOGLE WORKSPACE & CLOUD CONNECTIONS",
                     style = MaterialTheme.typography.labelSmall.copy(
-                        color = Slate400,
+                        color = theme.textSecondary,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp
                     )
@@ -104,18 +106,19 @@ fun WorkspaceAntigravityScreen(
             }
 
             items(connections, key = { it.id }) { conn ->
-                WorkspaceConnectionCard(
+                CozyWorkspaceConnectionCard(
                     connection = conn,
                     onTest = { onShowSnack("Testing ${conn.type.displayName}... Connection healthy!") }
                 )
             }
 
-            // Google Sheets Configuration Tile
+            // Google Sheets Configuration Tile with Pre-filled real Sheet IDs
             item {
                 Surface(
-                    color = Slate850,
-                    shape = RoundedCornerShape(14.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Slate700),
+                    color = theme.cardSurface,
+                    shape = RoundedCornerShape(18.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, theme.cardBorder),
+                    shadowElevation = 1.dp,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
@@ -125,21 +128,21 @@ fun WorkspaceAntigravityScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "📊 Google Sheet IDs Configuration",
+                                text = "📊 Connected Google Sheets",
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     fontWeight = FontWeight.Bold,
-                                    color = Slate100,
+                                    color = theme.textPrimary,
                                     fontSize = 13.sp
                                 )
                             )
 
                             Button(
                                 onClick = { onUpdateSheetIds(dailyIdText, contentIdText) },
-                                colors = ButtonDefaults.buttonColors(containerColor = Cyan400),
-                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = theme.accentPrimary),
+                                shape = RoundedCornerShape(10.dp),
                                 contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
                             ) {
-                                Text("Save IDs", color = Slate950, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                Text("Save IDs", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 11.sp)
                             }
                         }
 
@@ -148,9 +151,10 @@ fun WorkspaceAntigravityScreen(
                         OutlinedTextField(
                             value = dailyIdText,
                             onValueChange = { dailyIdText = it },
-                            label = { Text("Daily Schedule Sheet ID (Asia/Kolkata)", color = Slate400, fontSize = 11.sp) },
-                            textStyle = MaterialTheme.typography.bodySmall.copy(color = Slate100, fontSize = 11.sp),
+                            label = { Text("Daily Schedule Sheet ID (Asia/Kolkata)", color = theme.textSecondary, fontSize = 11.sp) },
+                            textStyle = MaterialTheme.typography.bodySmall.copy(color = theme.textPrimary, fontSize = 11.sp),
                             singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.fillMaxWidth()
                         )
 
@@ -159,9 +163,10 @@ fun WorkspaceAntigravityScreen(
                         OutlinedTextField(
                             value = contentIdText,
                             onValueChange = { contentIdText = it },
-                            label = { Text("Content Schedule Sheet ID (Thu-Wed Cycle)", color = Slate400, fontSize = 11.sp) },
-                            textStyle = MaterialTheme.typography.bodySmall.copy(color = Slate100, fontSize = 11.sp),
+                            label = { Text("Content Schedule Sheet ID (Thu-Wed Cycle)", color = theme.textSecondary, fontSize = 11.sp) },
+                            textStyle = MaterialTheme.typography.bodySmall.copy(color = theme.textPrimary, fontSize = 11.sp),
                             singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -170,133 +175,158 @@ fun WorkspaceAntigravityScreen(
 
             // Google Antigravity Bridge Export Preview
             item {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "ANTIGRAVITY BRIDGE (GITHUB EXPORT)",
+                        text = "1-TAP ANTIGRAVITY & OPENBOT EXPORT",
                         style = MaterialTheme.typography.labelSmall.copy(
-                            color = Slate400,
+                            color = theme.textSecondary,
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 1.sp
                         )
                     )
 
                     Button(
-                        onClick = { onShowSnack("Exported AGENTS.md, MEMORY.md, and skills.yaml for GitHub sync!") },
-                        colors = ButtonDefaults.buttonColors(containerColor = Indigo500),
-                        shape = RoundedCornerShape(8.dp),
+                        onClick = { onShowSnack("Exported AGENTS.md, MEMORY.md, and agents.yaml for GitHub Antigravity sync!") },
+                        colors = ButtonDefaults.buttonColors(containerColor = HelixPrimary),
+                        shape = RoundedCornerShape(10.dp),
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
                     ) {
-                        Icon(Icons.Default.CloudDownload, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Icon(Icons.Default.CloudDownload, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Export All", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text("Export All", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 }
             }
 
             item {
                 Surface(
-                    color = Slate850,
-                    shape = RoundedCornerShape(14.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Indigo400.copy(alpha = 0.5f)),
+                    color = theme.cardSurface,
+                    shape = RoundedCornerShape(18.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.2.dp, HelixPrimary.copy(alpha = 0.5f)),
+                    shadowElevation = 2.dp,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(12.dp)) {
-                        // Sub-tabs for export preview
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            listOf("AGENTS", "MEMORY", "SKILLS", "CHANNELS").forEach { tab ->
+                            listOf("AGENTS.md", "MEMORY.md", "agents.yaml", "skills.yaml").forEach { tab ->
                                 FilterChip(
                                     selected = activeBridgeTab == tab,
                                     onClick = { activeBridgeTab = tab },
                                     label = { Text(tab, fontSize = 10.sp) },
                                     colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = Indigo500,
+                                        selectedContainerColor = HelixPrimary,
                                         selectedLabelColor = Color.White,
-                                        containerColor = Slate900,
-                                        labelColor = Slate400
+                                        containerColor = theme.cardElevated,
+                                        labelColor = theme.textSecondary
                                     ),
-                                    shape = RoundedCornerShape(8.dp)
+                                    shape = RoundedCornerShape(10.dp)
                                 )
                             }
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // Code snippet box
                         val previewContent = when (activeBridgeTab) {
-                            "AGENTS" -> """
-                                agents:
-                                  - id: atlas
-                                    name: Atlas
-                                    title: Personal Chief of Staff
-                                    skills: [skill-creator, find-a-document, daily-briefing]
-                                  - id: reactor
-                                    name: Reactor
-                                    title: NocVita Hardware & Biorefinery
-                                    skills: [vendor-rfq-comparison, find-a-document]
-                                  - id: helix
-                                    name: Helix
-                                    title: Microbiology & Lab Bookings
-                                    skills: [lab-instrument-booking, find-a-document]
-                                  - id: pulse
-                                    name: Pulse
-                                    title: Content Studio
-                                    skills: [weekly-content-pipeline]
-                                  - id: forge
-                                    name: Forge
-                                    title: Antigravity Code & Simulations
+                            "AGENTS.md" -> """
+                                # HBot Agent Roster (h-pathak/HBot)
+                                - Atlas (chief-of-staff): Personal Chief of Staff & Dispatcher
+                                - Reactor (nocvita-ops): NocVita & Biorefinery Hardware Lead
+                                - Helix (bio-researcher): Scientific Research & Lab Bookings (MSU Baroda)
+                                - Pulse (content-studio): Weekly Content & Social Media Studio
+                                - Forge (antigravity-coder): Bioprocess Simulations & Antigravity Bridge
                             """.trimIndent()
-                            "MEMORY" -> """
-                                # HariomBot Learned Knowledge Vault
+                            "MEMORY.md" -> """
+                                # HBot Learned Memory Bank
                                 - Founder: Hariom Pathak (NocVita, Vadodara, Gujarat)
-                                - Microbiology Dept: MSU Baroda (The Geometric-Information Limit)
-                                - PBR Hardware: Borosilicate 3.3 (OD 60mm), SS316 tri-clamp endcaps
-                                - Lab Portals: I-STEM (ICP-MS), GBRC (MALDI-TOF / Sanger sequencing)
-                                - Security: Zero-trust mutating actions (Strict Approvals Gate)
+                                - Grant: Approved ₹2,48,000 SSIP 2.0 (Ref: SSIP 2.0/2026-27/532) at MSU Baroda
+                                - Research: Stochastic synchronization & Riverine AMR (mean MAR = 0.29)
+                                - Hardware: Borosilicate 3.3 (OD 60mm), SS316 tri-clamp, 3D SLA baffles
+                                - Sheets: Daily (1hqA9A...) & Content (1XpHiW...)
                             """.trimIndent()
-                            "SKILLS" -> """
+                            "agents.yaml" -> """
+                                agents:
+                                  - id: chief-of-staff
+                                    name: Atlas
+                                    skills: [vendor-rfq-comparison, istem-gbrc-slot-prep]
+                                  - id: nocvita-ops
+                                    name: Reactor
+                                    skills: [vendor-rfq-comparison, ssip-bill-compliance]
+                                  - id: bio-researcher
+                                    name: Helix
+                                    skills: [istem-gbrc-slot-prep, boltz-alphafold-prep]
+                                  - id: content-studio
+                                    name: Pulse
+                                    skills: [weekly-content-cycle]
+                                  - id: antigravity-coder
+                                    name: Forge
+                                    skills: [python-bioprocess-sim]
+                            """.trimIndent()
+                            else -> """
                                 skills:
                                   - slug: vendor-rfq-comparison
                                     title: Multi-Vendor RFQ & Quote Comparison
-                                  - slug: lab-instrument-booking
+                                  - slug: ssip-bill-compliance
+                                    title: SSIP 2.0 Bill & Voucher Compliance
+                                  - slug: istem-gbrc-slot-prep
                                     title: I-STEM & GBRC Instrument Slot Prep
-                                  - slug: weekly-content-pipeline
+                                  - slug: weekly-content-cycle
                                     title: Weekly Content Cycle (Blog, LinkedIn, Instagram)
-                                  - slug: skill-creator
-                                    title: Teach a Task / Skill Creator (/learn)
-                            """.trimIndent()
-                            else -> """
-                                channels:
-                                  - id: command-center
-                                    name: Command Center
-                                    permitted_agents: [atlas, reactor, helix, pulse, forge]
-                                  - id: nocvita-hardware
-                                    name: NocVita & Biorefinery
-                                  - id: research-and-labs
-                                    name: Research, Papers & Lab Bookings
+                                  - slug: boltz-alphafold-prep
+                                    title: Boltz API & AlphaFold Biomolecular Modeling
                             """.trimIndent()
                         }
 
                         Surface(
-                            color = Slate950,
-                            shape = RoundedCornerShape(8.dp),
-                            border = androidx.compose.foundation.BorderStroke(0.6.dp, Slate800),
+                            color = VelvetMidnightBg,
+                            shape = RoundedCornerShape(10.dp),
+                            border = androidx.compose.foundation.BorderStroke(0.6.dp, theme.cardBorder),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(
-                                text = previewContent,
-                                fontFamily = FontFamily.Monospace,
-                                fontSize = 10.sp,
-                                color = Emerald400,
-                                modifier = Modifier.padding(10.dp)
-                            )
+                            Column(modifier = Modifier.padding(10.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = activeBridgeTab,
+                                        color = BioluminescentAqua,
+                                        fontFamily = FontFamily.Monospace,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    IconButton(
+                                        onClick = {
+                                            clipboardManager.setText(AnnotatedString(previewContent))
+                                            onShowSnack("Copied $activeBridgeTab to clipboard!")
+                                        },
+                                        modifier = Modifier.size(24.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.ContentCopy,
+                                            contentDescription = "Copy",
+                                            tint = BioluminescentAqua,
+                                            modifier = Modifier.size(13.dp)
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = previewContent,
+                                    fontFamily = FontFamily.Monospace,
+                                    fontSize = 10.sp,
+                                    color = BioluminescentAqua,
+                                    lineHeight = 14.sp
+                                )
+                            }
                         }
                     }
                 }
@@ -306,14 +336,17 @@ fun WorkspaceAntigravityScreen(
 }
 
 @Composable
-fun WorkspaceConnectionCard(
+fun CozyWorkspaceConnectionCard(
     connection: WorkspaceConnection,
     onTest: () -> Unit
 ) {
+    val theme = LocalCozyTheme.current
+
     Surface(
-        color = Slate850,
-        shape = RoundedCornerShape(12.dp),
-        border = androidx.compose.foundation.BorderStroke(0.8.dp, Slate700),
+        color = theme.cardSurface,
+        shape = RoundedCornerShape(16.dp),
+        border = androidx.compose.foundation.BorderStroke(0.8.dp, theme.cardBorder),
+        shadowElevation = 1.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -329,7 +362,7 @@ fun WorkspaceConnectionCard(
                         text = connection.type.displayName,
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
-                            color = Slate100,
+                            color = theme.textPrimary,
                             fontSize = 13.sp
                         )
                     )
@@ -338,14 +371,14 @@ fun WorkspaceConnectionCard(
                         modifier = Modifier
                             .size(6.dp)
                             .clip(RoundedCornerShape(3.dp))
-                            .background(if (connection.isConnected) Emerald400 else Rose500)
+                            .background(if (connection.isConnected) ReactorPrimary else Rose500)
                     )
                 }
 
                 Text(
                     text = connection.details,
                     style = MaterialTheme.typography.bodySmall.copy(
-                        color = Slate300,
+                        color = theme.textSecondary,
                         fontSize = 11.sp
                     ),
                     modifier = Modifier.padding(top = 2.dp)
@@ -354,7 +387,7 @@ fun WorkspaceConnectionCard(
                 Text(
                     text = "${connection.statusText} · ${connection.lastSyncText}",
                     style = MaterialTheme.typography.labelSmall.copy(
-                        color = Slate400,
+                        color = theme.textSecondary,
                         fontSize = 10.sp
                     ),
                     modifier = Modifier.padding(top = 4.dp)
@@ -367,13 +400,13 @@ fun WorkspaceConnectionCard(
                 onClick = onTest,
                 modifier = Modifier
                     .size(34.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Slate800)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(theme.cardElevated)
             ) {
                 Icon(
                     imageVector = Icons.Default.Refresh,
                     contentDescription = "Test Connection",
-                    tint = Cyan400,
+                    tint = theme.accentPrimary,
                     modifier = Modifier.size(16.dp)
                 )
             }

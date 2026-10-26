@@ -15,6 +15,8 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.*
@@ -31,7 +33,6 @@ import androidx.compose.ui.unit.sp
 import com.example.data.model.*
 import com.example.ui.components.*
 import com.example.ui.theme.*
-import kotlinx.coroutines.launch
 
 @Composable
 fun ChatCommandCenterScreen(
@@ -48,20 +49,32 @@ fun ChatCommandCenterScreen(
     onOpenVoiceCall: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val theme = LocalCozyTheme.current
     val listState = rememberLazyListState()
-    val coroutineScope = rememberCoroutineScope()
     var showSlashCommands by remember { mutableStateOf(false) }
+    var isBentoCollapsed by remember { mutableStateOf(false) }
+
+    val quickActionChips = listOf(
+        Pair("⚡ Morning Brief", "/brief"),
+        Pair("🫧 Compare Vendor RFQs", "/rfq"),
+        Pair("🌱 SSIP 2.0 Grant Status", "/grant"),
+        Pair("🧬 Check Lab & GBRC Slots", "/lab-check"),
+        Pair("🔬 Boltz Modeling Prep", "/boltz"),
+        Pair("✍️ Run Thursday Content", "/content"),
+        Pair("🎙️ Interview Me", "/interview")
+    )
 
     val slashCommands = listOf(
-        Pair("/briefing", "Run full 08:30 AM workspace & schedule briefing"),
-        Pair("/rfq", "Generate technical vendor RFQ email for PBR components"),
+        Pair("/brief", "Run complete morning workspace & schedule briefing"),
+        Pair("/rfq", "Generate vendor RFQ email for PBR components under SSIP 2.0"),
+        Pair("/grant", "Check SSIP 2.0 grant status (Ref 532, ₹2,48,000) & prototyping budget"),
+        Pair("/boltz", "Prepare Boltz-1 & AlphaFold biomolecular docking setup"),
         Pair("/content", "Trigger Thursday-to-Wednesday content pipeline sweep"),
         Pair("/lab-check", "Check I-STEM & GBRC analytical slots availability"),
         Pair("/learn", "Extract discussed workflow and save as new SKILL.md"),
         Pair("/interview", "Start 1-question-at-a-time Business Context Interview")
     )
 
-    // Auto scroll to bottom when messages update
     LaunchedEffect(messages.size, isGenerating) {
         if (messages.isNotEmpty()) {
             listState.animateScrollToItem(messages.size - 1)
@@ -71,54 +84,58 @@ fun ChatCommandCenterScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Slate900)
+            .background(theme.canvasBg)
     ) {
-        // Active Channel Header Sub-bar
-        Surface(
-            color = Slate850,
-            tonalElevation = 2.dp,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = if (channelId == "command-center") "⚡ Command Center" else "${activeBot?.avatarEmoji ?: "🤖"} @${activeBot?.name ?: channelId}",
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = Cyan400,
-                            fontSize = 13.sp
-                        )
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(activeBot?.status?.color ?: Emerald400)
-                            .padding(horizontal = 6.dp, vertical = 1.dp)
-                    ) {
-                        Text(
-                            text = activeBot?.status?.label ?: "Active",
-                            color = Slate950,
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+        // Collapsible Bento Morning Brief Header (When on command-center)
+        if (channelId == "command-center") {
+            val latestBento = messages.mapNotNull { it.bentoBriefing }.lastOrNull()
+            if (latestBento != null) {
+                Surface(
+                    color = theme.canvasBg,
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 4.dp)
+                ) {
+                    Column {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { isBentoCollapsed = !isBentoCollapsed }
+                                .padding(vertical = 2.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "🌿 Morning Brief Bento",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = theme.accentPrimary,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = if (isBentoCollapsed) "(Tap to expand)" else "(Tap to collapse)",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = theme.textSecondary,
+                                        fontSize = 10.sp
+                                    )
+                                )
+                            }
+                            Icon(
+                                imageVector = if (isBentoCollapsed) Icons.Default.ExpandMore else Icons.Default.ExpandLess,
+                                contentDescription = null,
+                                tint = theme.textSecondary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+
+                        AnimatedVisibility(visible = !isBentoCollapsed) {
+                            BentoBriefingView(
+                                bento = latestBento,
+                                modifier = Modifier.padding(top = 4.dp, bottom = 6.dp)
+                            )
+                        }
                     }
                 }
-
-                Text(
-                    text = activeBot?.currentAction ?: "All agents coordinated",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = Slate400,
-                        fontSize = 10.sp
-                    ),
-                    maxLines = 1
-                )
             }
         }
 
@@ -130,7 +147,7 @@ fun ChatCommandCenterScreen(
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(top = 10.dp, bottom = 12.dp)
+            contentPadding = PaddingValues(top = 8.dp, bottom = 12.dp)
         ) {
             items(messages, key = { it.id }) { msg ->
                 when {
@@ -141,7 +158,7 @@ fun ChatCommandCenterScreen(
                         UserMessageBubble(text = msg.text, timestamp = msg.timestamp)
                     }
                     else -> {
-                        BotMessageBubble(
+                        CozyBotMessageBubble(
                             message = msg,
                             onApproveAction = onApproveAction,
                             onRejectAction = onRejectAction,
@@ -151,23 +168,24 @@ fun ChatCommandCenterScreen(
                 }
             }
 
-            // Typing / Thinking Indicator
+            // Typing / Thinking Indicator with living mascot
             if (isGenerating) {
                 item {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(start = 8.dp, top = 4.dp)
                     ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(14.dp),
-                            color = Cyan400,
-                            strokeWidth = 2.dp
+                        BotMascot(
+                            botId = activeBot?.id ?: "atlas",
+                            state = MascotState.THINKING,
+                            size = 32.dp
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
                         Text(
                             text = "${activeBot?.name ?: "Agent"} is analyzing workspace & drafting reply...",
                             style = MaterialTheme.typography.labelSmall.copy(
-                                color = Cyan400,
+                                color = theme.accentPrimary,
+                                fontWeight = FontWeight.SemiBold,
                                 fontSize = 11.sp
                             )
                         )
@@ -176,25 +194,26 @@ fun ChatCommandCenterScreen(
             }
         }
 
-        // Slash command autocomplete popup
+        // Slash command autocomplete drawer
         AnimatedVisibility(
             visible = showSlashCommands || inputText.startsWith("/"),
             enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
             exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
         ) {
             Surface(
-                color = Slate850,
-                shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Slate700),
+                color = theme.cardSurface,
+                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, theme.cardBorder),
+                shadowElevation = 6.dp,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp)
             ) {
                 Column(modifier = Modifier.padding(10.dp)) {
                     Text(
-                        text = "Quick Slash Commands",
+                        text = "⚡ Quick Slash Commands",
                         style = MaterialTheme.typography.labelSmall.copy(
-                            color = Slate400,
+                            color = theme.textSecondary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 11.sp
                         ),
@@ -214,14 +233,14 @@ fun ChatCommandCenterScreen(
                         ) {
                             Text(
                                 text = cmd,
-                                color = Cyan400,
+                                color = theme.accentPrimary,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp,
                                 modifier = Modifier.width(90.dp)
                             )
                             Text(
                                 text = desc,
-                                color = Slate300,
+                                color = theme.textPrimary,
                                 fontSize = 11.sp
                             )
                         }
@@ -237,20 +256,21 @@ fun ChatCommandCenterScreen(
                 .padding(horizontal = 12.dp, vertical = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(slashCommands) { (cmd, _) ->
+            items(quickActionChips) { (label, cmd) ->
                 Surface(
-                    color = Slate800,
-                    shape = RoundedCornerShape(12.dp),
-                    border = androidx.compose.foundation.BorderStroke(0.6.dp, Slate700),
+                    color = theme.cardSurface,
+                    shape = RoundedCornerShape(16.dp),
+                    border = androidx.compose.foundation.BorderStroke(0.8.dp, theme.cardBorder),
                     modifier = Modifier.clickable { onSendMessage(cmd) }
                 ) {
                     Text(
-                        text = cmd,
+                        text = label,
                         style = MaterialTheme.typography.labelSmall.copy(
-                            color = Cyan400,
+                            color = theme.textPrimary,
+                            fontWeight = FontWeight.SemiBold,
                             fontSize = 11.sp
                         ),
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                     )
                 }
             }
@@ -258,11 +278,11 @@ fun ChatCommandCenterScreen(
 
         // Bottom Composer Bar
         Surface(
-            color = Slate950,
-            tonalElevation = 8.dp,
+            color = theme.canvasBg,
+            tonalElevation = 6.dp,
             modifier = Modifier
                 .fillMaxWidth()
-                .border(width = 0.5.dp, color = Slate800)
+                .border(width = 0.5.dp, color = theme.cardBorder)
                 .navigationBarsPadding()
         ) {
             Row(
@@ -277,12 +297,13 @@ fun ChatCommandCenterScreen(
                     modifier = Modifier
                         .size(38.dp)
                         .clip(CircleShape)
-                        .background(if (showSlashCommands) Cyan400 else Slate850)
+                        .background(if (showSlashCommands) theme.accentPrimary else theme.cardSurface)
+                        .border(0.8.dp, theme.cardBorder, CircleShape)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Terminal,
                         contentDescription = "Commands",
-                        tint = if (showSlashCommands) Slate950 else Slate300,
+                        tint = if (showSlashCommands) Color.White else theme.textSecondary,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -296,19 +317,19 @@ fun ChatCommandCenterScreen(
                     placeholder = {
                         Text(
                             text = "Message @${activeBot?.name ?: "agents"} or type / ...",
-                            color = Slate400,
+                            color = theme.textSecondary,
                             fontSize = 13.sp
                         )
                     },
                     singleLine = false,
                     maxLines = 4,
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = Slate100, fontSize = 13.sp),
-                    shape = RoundedCornerShape(20.dp),
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = theme.textPrimary, fontSize = 13.sp),
+                    shape = RoundedCornerShape(22.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Cyan400,
-                        unfocusedBorderColor = Slate700,
-                        focusedContainerColor = Slate850,
-                        unfocusedContainerColor = Slate850
+                        focusedBorderColor = theme.accentPrimary,
+                        unfocusedBorderColor = theme.cardBorder,
+                        focusedContainerColor = theme.cardSurface,
+                        unfocusedContainerColor = theme.cardSurface
                     ),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                     keyboardActions = KeyboardActions(onSend = { onSendMessage(null) }),
@@ -325,13 +346,14 @@ fun ChatCommandCenterScreen(
                     modifier = Modifier
                         .size(38.dp)
                         .clip(CircleShape)
-                        .background(Slate850)
+                        .background(theme.cardSurface)
+                        .border(0.8.dp, theme.cardBorder, CircleShape)
                         .testTag("mic_dictation_button")
                 ) {
                     Icon(
                         imageVector = Icons.Default.Mic,
                         contentDescription = "Dictate / Call",
-                        tint = Cyan400,
+                        tint = theme.accentPrimary,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -343,8 +365,8 @@ fun ChatCommandCenterScreen(
                     onClick = { onSendMessage(null) },
                     enabled = inputText.isNotBlank() && !isGenerating,
                     colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = Cyan400,
-                        disabledContainerColor = Slate800
+                        containerColor = theme.accentPrimary,
+                        disabledContainerColor = theme.cardSurface
                     ),
                     modifier = Modifier
                         .size(38.dp)
@@ -353,7 +375,7 @@ fun ChatCommandCenterScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Send,
                         contentDescription = "Send",
-                        tint = if (inputText.isNotBlank()) Slate950 else Slate600,
+                        tint = if (inputText.isNotBlank()) Color.White else theme.textMuted,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -363,87 +385,62 @@ fun ChatCommandCenterScreen(
 }
 
 @Composable
-fun UserMessageBubble(text: String, timestamp: String) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.End
-    ) {
-        Surface(
-            color = Cyan500,
-            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 4.dp, bottomStart = 16.dp, bottomEnd = 16.dp),
-            modifier = Modifier.widthIn(max = 300.dp)
-        ) {
-            Text(
-                text = text,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = Slate950,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 13.sp
-                ),
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
-            )
-        }
-        Text(
-            text = timestamp,
-            style = MaterialTheme.typography.labelSmall.copy(color = Slate400, fontSize = 9.sp),
-            modifier = Modifier.padding(top = 2.dp, end = 4.dp)
-        )
-    }
-}
-
-@Composable
-fun BotMessageBubble(
+fun CozyBotMessageBubble(
     message: ChatMessage,
     onApproveAction: (String) -> Unit,
     onRejectAction: (String) -> Unit,
     onEditAndApproveAction: (String, Map<String, String>) -> Unit
 ) {
+    val theme = LocalCozyTheme.current
     val bot = Bot.ROSTER.find { it.id == message.botId } ?: Bot.ROSTER[0]
+    var showSteps by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.Start
     ) {
-        // Bot name header
+        // Mascot avatar + Name Header
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
         ) {
-            Text(
-                text = bot.avatarEmoji,
-                fontSize = 14.sp
+            BotMascot(
+                botId = bot.id,
+                state = bot.status.toMascotState(),
+                size = 28.dp
             )
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = bot.name,
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = FontWeight.Bold,
-                    color = bot.themeColor,
-                    fontSize = 11.sp
+                    color = theme.textPrimary,
+                    fontSize = 12.sp
                 )
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = message.timestamp,
                 style = MaterialTheme.typography.labelSmall.copy(
-                    color = Slate400,
+                    color = theme.textSecondary,
                     fontSize = 9.sp
                 )
             )
         }
 
-        // Main prose bubble
+        // Main text card
         if (message.text.isNotBlank()) {
             Surface(
-                color = Slate800,
-                shape = RoundedCornerShape(topStart = 4.dp, topEnd = 16.dp, bottomStart = 16.dp, bottomEnd = 16.dp),
-                border = androidx.compose.foundation.BorderStroke(0.6.dp, Slate700),
+                color = theme.cardSurface,
+                shape = RoundedCornerShape(topStart = 4.dp, topEnd = 20.dp, bottomStart = 20.dp, bottomEnd = 20.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, theme.cardBorder),
+                shadowElevation = 1.dp,
                 modifier = Modifier.widthIn(max = 340.dp)
             ) {
                 Text(
                     text = message.text,
                     style = MaterialTheme.typography.bodyMedium.copy(
-                        color = Slate100,
+                        color = theme.textPrimary,
                         fontSize = 13.sp,
                         lineHeight = 19.sp
                     ),
@@ -452,10 +449,84 @@ fun BotMessageBubble(
             }
         }
 
+        // Collapsible "Sources & Steps Used" pill
+        if (message.stepsUsed.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Surface(
+                color = theme.cardElevated,
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(0.6.dp, theme.cardBorder),
+                modifier = Modifier.clickable { showSteps = !showSteps }
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "🔍 ${message.stepsUsed.size} Steps & Sources Used",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = theme.accentPrimary,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector = if (showSteps) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = null,
+                        tint = theme.accentPrimary,
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
+            }
+
+            AnimatedVisibility(visible = showSteps) {
+                Surface(
+                    color = theme.cardElevated,
+                    shape = RoundedCornerShape(10.dp),
+                    border = androidx.compose.foundation.BorderStroke(0.6.dp, theme.cardBorder),
+                    modifier = Modifier
+                        .fillMaxWidth(0.9f)
+                        .padding(top = 4.dp)
+                ) {
+                    Column(modifier = Modifier.padding(8.dp)) {
+                        message.stepsUsed.forEach { step ->
+                            Text(
+                                text = "• $step",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = theme.textSecondary,
+                                    fontSize = 10.sp
+                                ),
+                                modifier = Modifier.padding(vertical = 1.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Embedded Bento Briefing
+        if (message.bentoBriefing != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            BentoBriefingView(bento = message.bentoBriefing)
+        }
+
         // Embedded Vendor Scorecard
         if (message.scorecard != null) {
             Spacer(modifier = Modifier.height(8.dp))
             VendorScorecardCard(scorecard = message.scorecard)
+        }
+
+        // Embedded Portal Takeover Card
+        if (message.portalTakeover != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            PortalTakeoverCard(card = message.portalTakeover)
+        }
+
+        // Embedded Skill Learned Card
+        if (message.skillLearned != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            SkillLearnedCard(skill = message.skillLearned)
         }
 
         // Embedded Inline Approval Card
@@ -474,5 +545,43 @@ fun BotMessageBubble(
             Spacer(modifier = Modifier.height(6.dp))
             CitationChipRow(chips = message.citationChips)
         }
+    }
+}
+
+@Composable
+fun UserMessageBubble(
+    text: String,
+    timestamp: String
+) {
+    val theme = LocalCozyTheme.current
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.End
+    ) {
+        Surface(
+            color = theme.accentPrimary,
+            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 4.dp, bottomStart = 20.dp, bottomEnd = 20.dp),
+            shadowElevation = 2.dp,
+            modifier = Modifier.widthIn(max = 300.dp)
+        ) {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = Color.White,
+                    fontSize = 13.sp,
+                    lineHeight = 19.sp
+                ),
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+            text = timestamp,
+            style = MaterialTheme.typography.labelSmall.copy(
+                color = theme.textSecondary,
+                fontSize = 9.sp
+            ),
+            modifier = Modifier.padding(end = 4.dp)
+        )
     }
 }

@@ -26,6 +26,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.*
+import com.example.ui.components.BotMascot
+import com.example.ui.components.MascotState
 import com.example.ui.theme.*
 
 @Composable
@@ -46,6 +48,7 @@ fun MemorySkillsScreen(
     onTriggerSkill: (SkillItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val theme = LocalCozyTheme.current
     var showAddDialog by remember { mutableStateOf(false) }
     var activeSubTab by remember { mutableStateOf("MEMORIES") } // "MEMORIES" or "SKILLS"
 
@@ -60,7 +63,7 @@ fun MemorySkillsScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Slate900)
+            .background(theme.canvasBg)
             .padding(horizontal = 16.dp, vertical = 10.dp)
             .testTag("memory_skills_screen")
     ) {
@@ -72,16 +75,16 @@ fun MemorySkillsScreen(
         ) {
             Column {
                 Text(
-                    text = "Memory & Skills Vault",
+                    text = "Brain & Skills Vault 🧠",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = Slate100,
+                        color = theme.textPrimary,
                         fontSize = 18.sp
                     )
                 )
                 Text(
-                    text = "Cross-Session Knowledge & Reusable Procedures",
-                    style = MaterialTheme.typography.labelSmall.copy(color = Cyan400)
+                    text = "Persistent Memory & Collectible Procedures",
+                    style = MaterialTheme.typography.labelSmall.copy(color = theme.accentPrimary)
                 )
             }
 
@@ -89,25 +92,26 @@ fun MemorySkillsScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Button(
                     onClick = onStartInterview,
-                    colors = ButtonDefaults.buttonColors(containerColor = Indigo500),
-                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = AtlasPrimary),
+                    shape = RoundedCornerShape(12.dp),
                     contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
                     modifier = Modifier.testTag("interview_me_button")
                 ) {
-                    Icon(Icons.Default.Psychology, contentDescription = null, modifier = Modifier.size(14.dp))
+                    Icon(Icons.Default.Psychology, contentDescription = null, tint = DeepEspressoText, modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Interview Me", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text("Interview Me", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = DeepEspressoText)
                 }
 
                 IconButton(
                     onClick = { showAddDialog = true },
                     modifier = Modifier
                         .size(36.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Slate800)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(theme.cardSurface)
+                        .border(0.8.dp, theme.cardBorder, RoundedCornerShape(10.dp))
                         .testTag("add_memory_button")
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Memory", tint = Cyan400, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.Add, contentDescription = "Add Memory", tint = theme.accentPrimary, modifier = Modifier.size(20.dp))
                 }
             }
         }
@@ -122,12 +126,12 @@ fun MemorySkillsScreen(
             FilterChip(
                 selected = activeSubTab == "MEMORIES",
                 onClick = { activeSubTab = "MEMORIES" },
-                label = { Text("Memory Bank (${memories.size})", fontSize = 12.sp) },
+                label = { Text("Memory Bank (${memories.size})", fontSize = 11.sp) },
                 colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = Cyan400,
-                    selectedLabelColor = Slate950,
-                    containerColor = Slate800,
-                    labelColor = Slate300
+                    selectedContainerColor = theme.accentPrimary,
+                    selectedLabelColor = Color.White,
+                    containerColor = theme.cardSurface,
+                    labelColor = theme.textSecondary
                 ),
                 shape = RoundedCornerShape(16.dp)
             )
@@ -135,12 +139,12 @@ fun MemorySkillsScreen(
             FilterChip(
                 selected = activeSubTab == "SKILLS",
                 onClick = { activeSubTab = "SKILLS" },
-                label = { Text("Skills Library (${skills.size})", fontSize = 12.sp) },
+                label = { Text("Skills Deck (${skills.size})", fontSize = 11.sp) },
                 colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = Indigo500,
+                    selectedContainerColor = HelixPrimary,
                     selectedLabelColor = Color.White,
-                    containerColor = Slate800,
-                    labelColor = Slate300
+                    containerColor = theme.cardSurface,
+                    labelColor = theme.textSecondary
                 ),
                 shape = RoundedCornerShape(16.dp)
             )
@@ -153,9 +157,10 @@ fun MemorySkillsScreen(
             val currentQ = interviewQuestions.getOrNull(interviewStep)
             if (currentQ != null) {
                 Surface(
-                    color = Slate850,
-                    shape = RoundedCornerShape(14.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.2.dp, Indigo400),
+                    color = theme.cardSurface,
+                    shape = RoundedCornerShape(20.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.2.dp, AtlasPrimary),
+                    shadowElevation = 3.dp,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 12.dp)
@@ -166,15 +171,19 @@ fun MemorySkillsScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = "🧠 Business Context Operator (Step ${currentQ.step + 1} of ${interviewQuestions.size})",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = Indigo400,
-                                    fontWeight = FontWeight.Bold
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                BotMascot(botId = "atlas", state = MascotState.LISTENING, size = 26.dp)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Atlas Interview · Q${currentQ.step + 1}/${interviewQuestions.size}",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = AtlasPrimary,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 )
-                            )
+                            }
                             TextButton(onClick = onCancelInterview) {
-                                Text("Dismiss", color = Slate400, fontSize = 11.sp)
+                                Text("Dismiss", color = theme.textSecondary, fontSize = 11.sp)
                             }
                         }
 
@@ -182,25 +191,24 @@ fun MemorySkillsScreen(
                             text = currentQ.question,
                             style = MaterialTheme.typography.titleSmall.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = Slate100,
+                                color = theme.textPrimary,
                                 fontSize = 13.sp
                             )
                         )
 
                         Text(
                             text = currentQ.rationale,
-                            style = MaterialTheme.typography.labelSmall.copy(color = Slate400, fontSize = 11.sp),
+                            style = MaterialTheme.typography.labelSmall.copy(color = theme.textSecondary, fontSize = 11.sp),
                             modifier = Modifier.padding(vertical = 4.dp)
                         )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
 
-                        // Multi-choice quick answer options
                         currentQ.options.forEach { option ->
                             Surface(
-                                color = Slate900,
-                                shape = RoundedCornerShape(8.dp),
-                                border = androidx.compose.foundation.BorderStroke(0.6.dp, Slate700),
+                                color = theme.cardElevated,
+                                shape = RoundedCornerShape(10.dp),
+                                border = androidx.compose.foundation.BorderStroke(0.6.dp, theme.cardBorder),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(vertical = 3.dp)
@@ -209,7 +217,7 @@ fun MemorySkillsScreen(
                                 Text(
                                     text = option,
                                     style = MaterialTheme.typography.bodySmall.copy(
-                                        color = Cyan400,
+                                        color = theme.textPrimary,
                                         fontSize = 11.sp
                                     ),
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp)
@@ -226,16 +234,16 @@ fun MemorySkillsScreen(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = onSearchChanged,
-                placeholder = { Text("Search facts, CAD specs, and guidelines...", color = Slate400, fontSize = 12.sp) },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Slate400) },
+                placeholder = { Text("Search SSIP grant, riverine AMR, CAD specs...", color = theme.textSecondary, fontSize = 12.sp) },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = theme.textSecondary) },
                 singleLine = true,
-                textStyle = MaterialTheme.typography.bodySmall.copy(color = Slate100),
-                shape = RoundedCornerShape(14.dp),
+                textStyle = MaterialTheme.typography.bodySmall.copy(color = theme.textPrimary),
+                shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Cyan400,
-                    unfocusedBorderColor = Slate700,
-                    focusedContainerColor = Slate850,
-                    unfocusedContainerColor = Slate850
+                    focusedBorderColor = theme.accentPrimary,
+                    unfocusedBorderColor = theme.cardBorder,
+                    focusedContainerColor = theme.cardSurface,
+                    unfocusedContainerColor = theme.cardSurface
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -253,12 +261,12 @@ fun MemorySkillsScreen(
                         onClick = { onCategorySelected(cat) },
                         label = { Text(cat.label, fontSize = 11.sp) },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = Slate700,
-                            selectedLabelColor = Cyan400,
-                            containerColor = Slate800,
-                            labelColor = Slate400
+                            selectedContainerColor = theme.accentPrimary.copy(alpha = 0.2f),
+                            selectedLabelColor = theme.accentPrimary,
+                            containerColor = theme.cardSurface,
+                            labelColor = theme.textSecondary
                         ),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(14.dp)
                     )
                 }
             }
@@ -274,11 +282,11 @@ fun MemorySkillsScreen(
                 contentPadding = PaddingValues(bottom = 16.dp)
             ) {
                 items(filteredMemories, key = { it.id }) { memory ->
-                    MemoryItemCard(memory = memory)
+                    CozyMemoryCard(memory = memory)
                 }
             }
         } else {
-            // Skills Library Tab
+            // Skills Deck Tab
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
@@ -287,7 +295,7 @@ fun MemorySkillsScreen(
                 contentPadding = PaddingValues(bottom = 16.dp)
             ) {
                 items(skills, key = { it.id }) { skill ->
-                    SkillItemCard(
+                    CozySkillCard(
                         skill = skill,
                         onTrigger = { onTriggerSkill(skill) }
                     )
@@ -300,18 +308,18 @@ fun MemorySkillsScreen(
     if (showAddDialog) {
         var newFact by remember { mutableStateOf("") }
         var newCat by remember { mutableStateOf(MemoryCategory.NOCVITA) }
-        var newTags by remember { mutableStateOf("Manual, Note") }
+        var newTags by remember { mutableStateOf("SSIP 2.0, NocVi, Research") }
 
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
-            title = { Text("Add Learned Memory", color = Slate100, fontWeight = FontWeight.Bold) },
+            title = { Text("Add Learned Memory", color = theme.textPrimary, fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedTextField(
                         value = newFact,
                         onValueChange = { newFact = it },
-                        label = { Text("Fact / Rule / Preference", color = Slate400) },
-                        textStyle = MaterialTheme.typography.bodySmall.copy(color = Slate100),
+                        label = { Text("Fact / Rule / Preference", color = theme.textSecondary) },
+                        textStyle = MaterialTheme.typography.bodySmall.copy(color = theme.textPrimary),
                         maxLines = 4,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -319,8 +327,8 @@ fun MemorySkillsScreen(
                     OutlinedTextField(
                         value = newTags,
                         onValueChange = { newTags = it },
-                        label = { Text("Tags (comma separated)", color = Slate400) },
-                        textStyle = MaterialTheme.typography.bodySmall.copy(color = Slate100),
+                        label = { Text("Tags (comma separated)", color = theme.textSecondary) },
+                        textStyle = MaterialTheme.typography.bodySmall.copy(color = theme.textPrimary),
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -334,27 +342,30 @@ fun MemorySkillsScreen(
                             showAddDialog = false
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Cyan400)
+                    colors = ButtonDefaults.buttonColors(containerColor = theme.accentPrimary)
                 ) {
-                    Text("Save Memory", color = Slate950, fontWeight = FontWeight.Bold)
+                    Text("Save Memory", color = Color.White, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showAddDialog = false }) {
-                    Text("Cancel", color = Slate400)
+                    Text("Cancel", color = theme.textSecondary)
                 }
             },
-            containerColor = Slate850
+            containerColor = theme.cardSurface
         )
     }
 }
 
 @Composable
-fun MemoryItemCard(memory: MemoryItem) {
+fun CozyMemoryCard(memory: MemoryItem) {
+    val theme = LocalCozyTheme.current
+
     Surface(
-        color = Slate850,
-        shape = RoundedCornerShape(12.dp),
-        border = androidx.compose.foundation.BorderStroke(0.8.dp, Slate700),
+        color = theme.cardSurface,
+        shape = RoundedCornerShape(18.dp),
+        border = androidx.compose.foundation.BorderStroke(0.8.dp, theme.cardBorder),
+        shadowElevation = 1.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
@@ -365,25 +376,25 @@ fun MemoryItemCard(memory: MemoryItem) {
             ) {
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(Cyan400.copy(alpha = 0.15f))
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(theme.accentPrimary.copy(alpha = 0.15f))
+                        .padding(horizontal = 7.dp, vertical = 2.dp)
                 ) {
                     Text(
                         text = memory.category.label,
-                        color = Cyan400,
+                        color = theme.accentPrimary,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
 
                 Surface(
-                    color = Slate900,
+                    color = theme.cardElevated,
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
                         text = "${memory.confidence}% Confidence",
-                        color = Emerald400,
+                        color = ReactorPrimary,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
@@ -396,7 +407,7 @@ fun MemoryItemCard(memory: MemoryItem) {
             Text(
                 text = memory.fact,
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    color = Slate100,
+                    color = theme.textPrimary,
                     fontSize = 12.sp,
                     lineHeight = 17.sp
                 )
@@ -411,20 +422,20 @@ fun MemoryItemCard(memory: MemoryItem) {
             ) {
                 Text(
                     text = "Source: ${memory.source} · ${memory.timestamp}",
-                    style = MaterialTheme.typography.labelSmall.copy(color = Slate400, fontSize = 9.sp)
+                    style = MaterialTheme.typography.labelSmall.copy(color = theme.textSecondary, fontSize = 9.sp)
                 )
 
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     memory.tags.take(3).forEach { tag ->
                         Surface(
-                            color = Slate900,
-                            shape = RoundedCornerShape(4.dp)
+                            color = theme.cardElevated,
+                            shape = RoundedCornerShape(6.dp)
                         ) {
                             Text(
                                 text = "#$tag",
-                                color = Slate300,
+                                color = theme.textSecondary,
                                 fontSize = 9.sp,
-                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
                             )
                         }
                     }
@@ -435,14 +446,17 @@ fun MemoryItemCard(memory: MemoryItem) {
 }
 
 @Composable
-fun SkillItemCard(
+fun CozySkillCard(
     skill: SkillItem,
     onTrigger: () -> Unit
 ) {
+    val theme = LocalCozyTheme.current
+
     Surface(
-        color = Slate850,
-        shape = RoundedCornerShape(14.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Indigo500.copy(alpha = 0.5f)),
+        color = theme.cardSurface,
+        shape = RoundedCornerShape(20.dp),
+        border = androidx.compose.foundation.BorderStroke(1.2.dp, HelixPrimary.copy(alpha = 0.5f)),
+        shadowElevation = 2.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
@@ -455,14 +469,14 @@ fun SkillItemCard(
                     Icon(
                         imageVector = Icons.Default.Code,
                         contentDescription = null,
-                        tint = Indigo400,
+                        tint = HelixPrimary,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = skill.slug,
                         style = MaterialTheme.typography.labelSmall.copy(
-                            color = Indigo400,
+                            color = HelixPrimary,
                             fontWeight = FontWeight.Bold
                         )
                     )
@@ -470,13 +484,13 @@ fun SkillItemCard(
 
                 Button(
                     onClick = onTrigger,
-                    colors = ButtonDefaults.buttonColors(containerColor = Indigo500),
+                    colors = ButtonDefaults.buttonColors(containerColor = HelixPrimary),
                     shape = RoundedCornerShape(10.dp),
                     contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
                 ) {
-                    Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(12.dp))
+                    Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = Color.White, modifier = Modifier.size(12.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Run Skill", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text("Trigger Skill", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
 
@@ -486,7 +500,7 @@ fun SkillItemCard(
                 text = skill.title,
                 style = MaterialTheme.typography.titleSmall.copy(
                     fontWeight = FontWeight.Bold,
-                    color = Slate100,
+                    color = theme.textPrimary,
                     fontSize = 14.sp
                 )
             )
@@ -494,7 +508,7 @@ fun SkillItemCard(
             Text(
                 text = skill.summary,
                 style = MaterialTheme.typography.bodySmall.copy(
-                    color = Slate300,
+                    color = theme.textSecondary,
                     fontSize = 11.sp
                 ),
                 modifier = Modifier.padding(top = 2.dp)
@@ -503,18 +517,19 @@ fun SkillItemCard(
             Spacer(modifier = Modifier.height(8.dp))
 
             Surface(
-                color = Slate900,
-                shape = RoundedCornerShape(8.dp),
+                color = theme.cardElevated,
+                shape = RoundedCornerShape(10.dp),
+                border = androidx.compose.foundation.BorderStroke(0.6.dp, theme.cardBorder),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(8.dp)) {
                     Text(
                         text = "Trigger rule: ${skill.triggerRule}",
-                        style = MaterialTheme.typography.labelSmall.copy(color = Slate400, fontSize = 10.sp)
+                        style = MaterialTheme.typography.labelSmall.copy(color = theme.textSecondary, fontSize = 10.sp)
                     )
                     Text(
                         text = "Tools: ${skill.requiredTools.joinToString(", ")}",
-                        style = MaterialTheme.typography.labelSmall.copy(color = Cyan400, fontSize = 10.sp),
+                        style = MaterialTheme.typography.labelSmall.copy(color = theme.accentPrimary, fontSize = 10.sp),
                         modifier = Modifier.padding(top = 2.dp)
                     )
                 }

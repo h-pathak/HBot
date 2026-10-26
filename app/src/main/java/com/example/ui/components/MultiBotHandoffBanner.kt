@@ -2,7 +2,6 @@ package com.example.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -25,27 +24,34 @@ fun MultiBotHandoffBanner(
     handoff: BotHandoff,
     modifier: Modifier = Modifier
 ) {
+    val theme = LocalCozyTheme.current
+
     Surface(
-        color = Slate800,
-        shape = RoundedCornerShape(12.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Indigo500.copy(alpha = 0.5f)),
+        color = theme.cardSurface,
+        shape = RoundedCornerShape(20.dp),
+        border = androidx.compose.foundation.BorderStroke(1.2.dp, HelixPrimary.copy(alpha = 0.5f)),
+        shadowElevation = 2.dp,
         modifier = modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.padding(14.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // From bot badge
+                // From bot mascot
+                BotMascot(botId = handoff.fromBotId, state = MascotState.IDLE, size = 26.dp)
+
+                Spacer(modifier = Modifier.width(6.dp))
+
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(6.dp))
-                        .background(AtlasColor.copy(alpha = 0.2f))
-                        .padding(horizontal = 8.dp, vertical = 2.dp)
+                        .background(AtlasLight)
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
                     Text(
                         text = "@${handoff.fromBotId}",
-                        color = AtlasColor,
+                        color = AtlasDark,
                         fontWeight = FontWeight.Bold,
                         fontSize = 11.sp
                     )
@@ -56,45 +62,39 @@ fun MultiBotHandoffBanner(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = "Delegated to",
-                    tint = Cyan400,
+                    tint = theme.accentPrimary,
                     modifier = Modifier.size(14.dp)
                 )
 
                 Spacer(modifier = Modifier.width(6.dp))
 
-                // To bot badge
+                // To bot mascot
+                BotMascot(botId = handoff.toBotId, state = MascotState.WORKING, size = 26.dp)
+
+                Spacer(modifier = Modifier.width(6.dp))
+
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(6.dp))
-                        .background(ReactorColor.copy(alpha = 0.2f))
-                        .padding(horizontal = 8.dp, vertical = 2.dp)
+                        .background(ReactorLight)
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
                     Text(
                         text = "@${handoff.toBotId}",
-                        color = ReactorColor,
+                        color = ReactorDark,
                         fontWeight = FontWeight.Bold,
                         fontSize = 11.sp
                     )
                 }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Text(
-                    text = "Delegation Handoff",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = Slate400,
-                        fontSize = 10.sp
-                    )
-                )
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = handoff.taskTitle,
                 style = MaterialTheme.typography.titleSmall.copy(
                     fontWeight = FontWeight.Bold,
-                    color = Slate100,
+                    color = theme.textPrimary,
                     fontSize = 13.sp
                 )
             )
@@ -102,10 +102,20 @@ fun MultiBotHandoffBanner(
             Text(
                 text = handoff.contextSummary,
                 style = MaterialTheme.typography.bodySmall.copy(
-                    color = Slate300,
+                    color = theme.textSecondary,
                     fontSize = 11.sp
                 ),
                 modifier = Modifier.padding(top = 2.dp)
+            )
+
+            Text(
+                text = "Reasoning: ${handoff.reasoning}",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = theme.accentPrimary,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.SemiBold
+                ),
+                modifier = Modifier.padding(top = 4.dp)
             )
         }
     }

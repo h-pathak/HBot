@@ -1,60 +1,144 @@
 package com.example.ui.theme
 
 import android.app.Activity
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Cyan400,
-    onPrimary = Slate950,
-    primaryContainer = Slate800,
-    onPrimaryContainer = Cyan400,
-    secondary = Emerald400,
-    onSecondary = Slate950,
-    secondaryContainer = Slate800,
-    onSecondaryContainer = Emerald400,
-    tertiary = Indigo400,
-    onTertiary = Slate950,
-    background = Slate900,
-    onBackground = Slate100,
-    surface = Slate800,
-    onSurface = Slate100,
-    surfaceVariant = Slate850,
-    onSurfaceVariant = Slate300,
-    outline = Slate700,
-    outlineVariant = Slate600,
-    error = Rose500,
-    onError = Slate950
+// Dynamic custom theme token holder
+data class CozyThemeColors(
+    val isNight: Boolean,
+    val canvasBg: Color,
+    val cardSurface: Color,
+    val cardElevated: Color,
+    val cardBorder: Color,
+    val textPrimary: Color,
+    val textSecondary: Color,
+    val textMuted: Color,
+    val accentPrimary: Color,
+    val accentSecondary: Color,
+    val accentTertiary: Color,
+    val dockBg: Color,
+    val meshMint: Color,
+    val meshLavender: Color,
+    val meshPeach: Color
+)
+
+val LocalCozyTheme = compositionLocalOf {
+    CozyThemeColors(
+        isNight = true,
+        canvasBg = VelvetMidnightBg,
+        cardSurface = ObsidianGlassCard,
+        cardElevated = ObsidianGlassCardElevated,
+        cardBorder = MidnightBorder,
+        textPrimary = MidnightTextPrimary,
+        textSecondary = MidnightTextSecondary,
+        textMuted = MidnightTextMuted,
+        accentPrimary = BioluminescentAqua,
+        accentSecondary = BioluminescentViolet,
+        accentTertiary = BioluminescentAmber,
+        dockBg = ObsidianGlassCard,
+        meshMint = BioluminescentAqua.copy(alpha = 0.12f),
+        meshLavender = BioluminescentViolet.copy(alpha = 0.12f),
+        meshPeach = BioluminescentAmber.copy(alpha = 0.08f)
+    )
+}
+
+val CozyDaylightColors = CozyThemeColors(
+    isNight = false,
+    canvasBg = OatmilkBg,
+    cardSurface = OatmilkSurface,
+    cardElevated = OatmilkSurfaceCard,
+    cardBorder = OatmilkBorder,
+    textPrimary = DeepEspressoText,
+    textSecondary = WarmStoneText,
+    textMuted = WarmMutedText,
+    accentPrimary = ReactorPrimary,
+    accentSecondary = HelixPrimary,
+    accentTertiary = AtlasPrimary,
+    dockBg = OatmilkSurface.copy(alpha = 0.92f),
+    meshMint = PastelMint.copy(alpha = 0.5f),
+    meshLavender = PastelLavender.copy(alpha = 0.45f),
+    meshPeach = PastelPeach.copy(alpha = 0.45f)
+)
+
+val BioluminescentNightColors = CozyThemeColors(
+    isNight = true,
+    canvasBg = VelvetMidnightBg,
+    cardSurface = ObsidianGlassCard,
+    cardElevated = ObsidianGlassCardElevated,
+    cardBorder = MidnightBorder,
+    textPrimary = MidnightTextPrimary,
+    textSecondary = MidnightTextSecondary,
+    textMuted = MidnightTextMuted,
+    accentPrimary = BioluminescentAqua,
+    accentSecondary = BioluminescentViolet,
+    accentTertiary = BioluminescentAmber,
+    dockBg = ObsidianGlassCard.copy(alpha = 0.92f),
+    meshMint = BioluminescentAqua.copy(alpha = 0.14f),
+    meshLavender = BioluminescentViolet.copy(alpha = 0.14f),
+    meshPeach = BioluminescentAmber.copy(alpha = 0.10f)
+)
+
+private val M3DarkColorScheme = darkColorScheme(
+    primary = BioluminescentAqua,
+    onPrimary = VelvetMidnightBg,
+    primaryContainer = ObsidianGlassCard,
+    onPrimaryContainer = BioluminescentAqua,
+    secondary = BioluminescentViolet,
+    onSecondary = VelvetMidnightBg,
+    tertiary = BioluminescentAmber,
+    background = VelvetMidnightBg,
+    surface = ObsidianGlassCard,
+    onBackground = MidnightTextPrimary,
+    onSurface = MidnightTextPrimary,
+    outline = MidnightBorder
+)
+
+private val M3LightColorScheme = lightColorScheme(
+    primary = ReactorPrimary,
+    onPrimary = Color.White,
+    primaryContainer = OatmilkSurfaceCard,
+    onPrimaryContainer = ReactorDark,
+    secondary = HelixPrimary,
+    onSecondary = Color.White,
+    tertiary = AtlasPrimary,
+    background = OatmilkBg,
+    surface = OatmilkSurface,
+    onBackground = DeepEspressoText,
+    onSurface = DeepEspressoText,
+    outline = OatmilkBorder
 )
 
 @Composable
 fun HariomBotTheme(
-    darkTheme: Boolean = true, // Dark-first aesthetic
+    isNightMode: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = DarkColorScheme
+    val cozyColors = if (isNightMode) BioluminescentNightColors else CozyDaylightColors
+    val m3Colors = if (isNightMode) M3DarkColorScheme else M3LightColorScheme
+
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as? Activity)?.window
             if (window != null) {
-                window.statusBarColor = Slate900.toArgb()
-                window.navigationBarColor = Slate950.toArgb()
-                WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
-                WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = false
+                WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !isNightMode
+                WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = !isNightMode
             }
         }
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    CompositionLocalProvider(LocalCozyTheme provides cozyColors) {
+        MaterialTheme(
+            colorScheme = m3Colors,
+            typography = Typography,
+            content = content
+        )
+    }
 }

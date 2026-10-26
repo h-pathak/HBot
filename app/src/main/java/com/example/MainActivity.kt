@@ -5,16 +5,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.example.ui.HariomBotApp
-import com.example.ui.theme.HariomBotTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            HariomBotTheme {
-                HariomBotApp()
-            }
+            HariomBotApp()
         }
     }
 }

@@ -26,7 +26,7 @@ class HariomBotRepository {
     private val _approvals = MutableStateFlow<List<ApprovalAction>>(emptyList())
     val approvals: StateFlow<List<ApprovalAction>> = _approvals.asStateFlow()
 
-    // Activity Tasks State (Dots Activity View)
+    // Activity Tasks State
     private val _activities = MutableStateFlow<List<ActivityTask>>(emptyList())
     val activities: StateFlow<List<ActivityTask>> = _activities.asStateFlow()
 
@@ -46,9 +46,14 @@ class HariomBotRepository {
     private val _workspaceConnections = MutableStateFlow<List<WorkspaceConnection>>(emptyList())
     val workspaceConnections: StateFlow<List<WorkspaceConnection>> = _workspaceConnections.asStateFlow()
 
-    // Sheet IDs
-    var dailyScheduleSheetId: String = "1dAi_Schedule_AsiaKolkata_MSU_NocVita"
-    var contentScheduleSheetId: String = "1cNt_ContentCalendar_ThuWed_Cycle"
+    companion object {
+        const val DAILY_SCHEDULE_SHEET_ID = "1hqA9AyxxWv6B9HlPPfLumetfhSzduUZc22dPD0AzxYk"
+        const val CONTENT_SCHEDULE_SHEET_ID = "1XpHiWo6J_RVBsNN5ZgnWKUr9FDgX_cTNhIDYKZvHMEw"
+    }
+
+    // Sheet IDs specified in user prompt
+    var dailyScheduleSheetId: String = DAILY_SCHEDULE_SHEET_ID
+    var contentScheduleSheetId: String = CONTENT_SCHEDULE_SHEET_ID
 
     init {
         seedInitialData()
@@ -57,140 +62,184 @@ class HariomBotRepository {
     private fun seedInitialData() {
         val now = currentTime()
 
-        // 1. Initial Approvals
+        // 1. Initial Approvals (Matching Prompt 3)
         val initialApprovals = listOf(
             ApprovalAction(
-                id = "appr-001",
+                id = "appr-ssip-01",
                 requestingBotId = "reactor",
-                actionType = ApprovalType.GMAIL_SEND,
-                title = "RFQ Follow-Up to Trident Labortek",
-                targetSummary = "sales@tridentlabortek.com",
+                actionType = ApprovalType.GMAIL_DRAFT,
+                title = "RFQ: 3D SLA Baffles & Borosilicate Fittings (SSIP 2.0 Allocation)",
+                targetSummary = "quotes@vexma.com, sales@soch3d.com",
+                diffPreview = "+ Requested student-startup 15% discount for NocVi prototype\n+ Month-1 SSIP 2.0 allocation budget ceiling: ₹60,000",
+                budgetTag = "SSIP 2.0 Budget: ₹2,48,000 Total (Ref: 532)",
                 fields = mapOf(
-                    "To" to "sales@tridentlabortek.com",
-                    "Subject" to "RFQ Quotation Follow-up: Borosilicate Column & SS316 Tri-clamp Caps - NocVita Prototyping",
-                    "Item" to "Borosilicate Glass Column OD 60mm x 600mm x 3.2mm (Qty: 2)",
-                    "Material Grade" to "Borosilicate 3.3, Thermal shock resistant, ISO 3585",
+                    "To" to "quotes@vexma.com, sales@soch3d.com",
+                    "Subject" to "RFQ: 3D SLA Oscillatory Baffles & Borosilicate Adapters - NocVita (MSU Baroda SSIP 2.0)",
+                    "Grant Reference" to "SSIP 2.0/2026-27/532 · STBI Savli Incubation",
+                    "Target Budget" to "₹60,000 Month-1 prototyping tranche",
+                    "Material Spec" to "Biocompatible Clear Resin (autoclavable) & Borosilicate 3.3 sleeves",
                     "Delivery To" to "NocVita Lab, Vadodara, Gujarat 390002",
-                    "Quoted Price" to "₹8,450 (includes 15% academic/startup discount)",
-                    "Body" to "Dear Sales Team at Trident Labortek,\n\nThank you for the proforma quote for the 60mm OD Borosilicate Column and SS316 multi-port tri-clamp caps. We would like to confirm if delivery to our Vadodara lab can be dispatched by Friday, and if GST invoicing under NocVita can be provided.\n\nRegards,\nHariom Pathak\nFounder, NocVita"
+                    "Body" to "Dear Vexma Technologies & Soch3D Sales Teams,\n\nWe are prototyping the NocVi bioluminescent oscillatory flow photobioreactor under our approved SSIP 2.0 grant at MSU Baroda (Ref: SSIP 2.0/2026-27/532). Please provide itemized student-startup pricing, GST invoice capability, and lead time for 12 units of our 3D-printed helical baffle inserts.\n\nWarm regards,\nHariom Pathak\nFounder, NocVita"
                 ),
                 status = ApprovalStatus.PENDING,
                 createdAt = "Today, 08:35 AM"
             ),
             ApprovalAction(
-                id = "appr-002",
-                requestingBotId = "atlas",
-                actionType = ApprovalType.SHEET_UPDATE,
-                title = "Update Daily Schedule (MSU Baroda Lab Slot)",
-                targetSummary = "Daily Schedule Sheet (Row 14)",
+                id = "appr-lab-02",
+                requestingBotId = "helix",
+                actionType = ApprovalType.CALENDAR_SLOT,
+                title = "Reserve GBRC & I-STEM Analytical Slots (Riverine AMR Water Testing)",
+                targetSummary = "Google Calendar (Asia/Kolkata) & GBRC Booking",
+                diffPreview = "+ Add 10:30 AM - 1:00 PM Thursday ICP-MS slot\n+ 14 MALDI-TOF isolates preparation checklist attached",
+                budgetTag = "MSU Microbiology Research Fund",
                 fields = mapOf(
-                    "Sheet ID" to dailyScheduleSheetId,
-                    "Tab" to "Today - Asia/Kolkata",
-                    "Time Block" to "15:30 - 17:30 IST",
-                    "Activity" to "Microbiology Lab (MSU Baroda) - Stochastic culture optical density checks & sampling",
-                    "Priority" to "High"
+                    "Facility" to "GBRC Gandhinagar & I-STEM Central Facility",
+                    "Analyses" to "ICP-MS (Heavy metal ions in Mahi/Vishwamitri rivers) & MALDI-TOF (MAR = 0.29 isolates)",
+                    "Date & Time" to "Thursday · 10:30 AM - 1:00 PM IST",
+                    "Proforma Fee" to "₹4,200 (Academic University Category)",
+                    "Sample Note" to "14 riverine bacterial isolates prepared in triplicate."
                 ),
                 status = ApprovalStatus.PENDING,
                 createdAt = "Today, 08:42 AM"
             ),
             ApprovalAction(
-                id = "appr-003",
-                requestingBotId = "helix",
-                actionType = ApprovalType.CALENDAR_EVENT,
-                title = "Schedule I-STEM ICP-MS Booking Window",
-                targetSummary = "Google Calendar (Asia/Kolkata)",
+                id = "appr-content-03",
+                requestingBotId = "pulse",
+                actionType = ApprovalType.SHEET_ROW_UPDATE,
+                title = "Log Week 43 Content: 'Bioluminescent Microalgae for Decentralized Wastewater'",
+                targetSummary = "Content Schedule Sheet (Row 43)",
+                diffPreview = "+ Blog outline & stats logged to Google Sheet\n+ LinkedIn Carousel draft ready for Saturday review",
+                budgetTag = "Content Studio",
                 fields = mapOf(
-                    "Event Title" to "I-STEM Analytical Facility: ICP-MS Water Remediation Sample Testing",
-                    "Date & Time" to "Thursday, Oct 23 · 10:00 AM - 12:30 PM IST",
-                    "Location" to "Central Analytical Lab / I-STEM Slot Booking",
-                    "Notes" to "Proforma invoice ₹4,200 generated. Bring filtered microalgae digest samples."
+                    "Sheet ID" to contentScheduleSheetId,
+                    "Thursday Stage" to "SEO Keyword sweep & verified literature citations complete",
+                    "Friday Stage" to "1,400-word Google Doc draft scheduled",
+                    "Saturday Stage" to "5-slide LinkedIn Carousel on NocVi bioreactor kinetics",
+                    "Sunday Stage" to "2 Instagram Reels hooks on student biotech innovation in Gujarat"
                 ),
                 status = ApprovalStatus.PENDING,
                 createdAt = "Today, 09:15 AM"
-            ),
-            ApprovalAction(
-                id = "appr-004",
-                requestingBotId = "pulse",
-                actionType = ApprovalType.DOC_CREATE,
-                title = "Create Friday Blog Draft in Google Docs",
-                targetSummary = "Google Docs / Content Engine",
-                fields = mapOf(
-                    "Doc Title" to "The Geometric-Information Limit: Synchronization in Microbial Populations",
-                    "Target Folder" to "Google Drive / Content Schedule / 2026-Cycle",
-                    "Word Count Target" to "1,400 words",
-                    "Includes" to "Literature citations, Boltz-1 binding hypothesis, 3 carousel slide briefs"
-                ),
-                status = ApprovalStatus.PENDING,
-                createdAt = "Today, 09:30 AM"
             )
         )
         _approvals.value = initialApprovals
 
         // 2. Scorecard Data for NocVita PBR Hardware
         val pbrScorecard = VendorScorecard(
-            title = "NocVita Photobioreactor Column & Tri-Clamp Caps",
-            component = "Borosilicate 3.3 Tube (OD 60mm, H 600mm) + SS316 Multi-port Caps",
+            title = "NocVi Bioluminescent Photobioreactor Column & Baffles",
+            component = "Borosilicate 3.3 Tube (OD 60mm) + 3D SLA Helical Baffles + SS316 Tri-clamps",
+            budgetAllocation = "SSIP 2.0 Month-1 Tranche: ₹60,000",
             rows = listOf(
                 VendorScorecardRow(
                     vendorName = "Trident Labortek",
-                    item = "Borosilicate 3.3 + SS316 Caps",
+                    item = "Borosilicate 3.3 + SS316 Tri-clamp Caps",
                     unitPriceINR = "₹8,450",
-                    materialSpec = "Schott Duran 3.3 / SS316L CNC",
-                    studentDiscount = "15% Applied",
+                    materialSpec = "Schott Duran 3.3 / SS316 CNC",
+                    studentDiscount = "15% Applied (SSIP)",
                     leadTime = "4-5 Days",
-                    deliveryLocation = "Vadodara (Direct Courier)",
+                    deliveryLocation = "Vadodara (Direct courier)",
                     isRecommended = true
                 ),
                 VendorScorecardRow(
                     vendorName = "Vexma Technologies",
-                    item = "3D SLA Baffles + Cap Prototypes",
+                    item = "3D SLA Baffles in Biocompatible Resin",
                     unitPriceINR = "₹9,800",
-                    materialSpec = "Biocompatible Clear Resin",
-                    studentDiscount = "10% Applied",
-                    leadTime = "3-4 Days",
-                    deliveryLocation = "Gandhinagar / Vadodara",
-                    isRecommended = false
+                    materialSpec = "Clear Autoclavable Photopolymer",
+                    studentDiscount = "10% Startup",
+                    leadTime = "3 Days",
+                    deliveryLocation = "Vadodara Hub",
+                    isRecommended = true
                 ),
                 VendorScorecardRow(
                     vendorName = "Soch3D",
-                    item = "Laser-cut Acrylic Enclosures",
+                    item = "Precision Acrylic Outer Enclosure",
                     unitPriceINR = "₹6,200",
                     materialSpec = "8mm Cast Acrylic (UV-pass)",
                     studentDiscount = "None",
-                    leadTime = "6 Days",
-                    deliveryLocation = "Vadodara Hub",
+                    leadTime = "5 Days",
+                    deliveryLocation = "Gandhinagar Dispatch",
                     isRecommended = false
                 ),
                 VendorScorecardRow(
-                    vendorName = "Amerging Tech / BioKav",
-                    item = "Peristaltic Pump & Silicone Tubing",
+                    vendorName = "Bills Biotech / BioKav",
+                    item = "Spent Coffee Extraction Tube & Pump",
                     unitPriceINR = "₹11,500",
-                    materialSpec = "Medical grade silicone (Pt-cured)",
-                    studentDiscount = "5% Startup",
-                    leadTime = "7 Days",
-                    deliveryLocation = "Gujarat courier",
+                    materialSpec = "Pt-cured medical silicone",
+                    studentDiscount = "Startup Partner",
+                    leadTime = "6 Days",
+                    deliveryLocation = "Savli / Vadodara",
                     isRecommended = false
                 )
             )
         )
 
-        // 3. Initial Chat Messages
+        // 3. Bento Briefing Protocol block
+        val bentoData = BentoBriefing(
+            greeting = "Good morning, Hariom 🌿",
+            dateText = "Monday · Asia/Kolkata (Vadodara)",
+            schedulePriority = BentoPriorityItem(
+                title = "MSU Microbiology Lab Slot",
+                subtitle = "3:30 PM - 5:30 PM · Optical density & stochastic culture sampling",
+                iconEmoji = "🔬",
+                badge = "High Priority"
+            ),
+            emailPriority = BentoPriorityItem(
+                title = "3 Unread Vendor Quotes",
+                subtitle = "Trident Labortek & Vexma proforma estimates for SSIP 2.0 prototype",
+                iconEmoji = "📬",
+                badge = "Needs Review"
+            ),
+            grantLabPriority = BentoPriorityItem(
+                title = "SSIP 2.0 Grant (Ref: 532)",
+                subtitle = "₹2,48,000 allocated · STBI Savli incubation & Sandoz validation",
+                iconEmoji = "🌱",
+                badge = "Approved"
+            ),
+            contentPriority = BentoPriorityItem(
+                title = "Week 43 Content Pipeline",
+                subtitle = "Bioluminescent microalgae thesis outline ready for Google Docs",
+                iconEmoji = "✍️",
+                badge = "Thursday Kickoff"
+            )
+        )
+
+        // 4. Portal Takeover Checklist for I-STEM / GBRC
+        val portalChecklist = PortalTakeoverCard(
+            id = "ptc-istem-01",
+            portalName = "I-STEM Central Analytical Portal",
+            purpose = "Reserve ICP-MS heavy metal run (Mahi & Vishwamitri river isolates)",
+            loginUrl = "https://istem-portal.gov.in/login",
+            credentialHint = "Institutional Account: MSU Baroda Department of Microbiology",
+            checklist = listOf(
+                PortalChecklistItem("step-1", "Navigate to I-STEM login page & solve CAPTCHA image", isCompleted = false),
+                PortalChecklistItem("step-2", "Select Analytical Category: ICP-MS (High Resolution)", "ICP-MS HR-2026", isCompleted = true),
+                PortalChecklistItem("step-3", "Paste Project Ref: SSIP 2.0/2026-27/532", "SSIP 2.0/2026-27/532", isCompleted = true),
+                PortalChecklistItem("step-4", "Generate proforma invoice & download payment slip (₹4,200)", isCompleted = false)
+            )
+        )
+
+        // 5. Initial Chat Messages (Living conversation)
         val commandCenterMsgs = listOf(
             ChatMessage(
-                id = "msg-101",
+                id = "msg-100",
                 channelId = "command-center",
                 senderType = SenderType.BOT,
                 botId = "atlas",
-                text = "🌅 **Good morning Hariom!** Completed 08:30 AM workspace heartbeat check (Asia/Kolkata).\n\n• **Gmail Triage:** 4 unread threads processed. Identified proforma quotation from Trident Labortek and an editorial update from *Nonlinear Science*.\n• **Daily Schedule:** MSU Baroda microbiology lab block at 3:30 PM. Weather in Vadodara is 31°C, clear.\n• **Task Handoff:** Delegating the PBR column vendor quotation audit to @Reactor.",
+                text = "🌿 **Good morning, Hariom!** Atlas here with your morning sync.\n\nAll 5 specialist companions are active in the Command Center. I've compiled your morning priorities across **NocVita**, your **SSIP 2.0 Grant**, and your **MSU Baroda research** below:",
                 timestamp = "08:30 AM",
+                bentoBriefing = bentoData,
+                stepsUsed = listOf(
+                    "Read Daily Schedule Sheet (Row 14)",
+                    "Scanned Gmail inbox for SSIP 2.0 & vendor threads",
+                    "Verified Google Calendar Asia/Kolkata appointments"
+                ),
                 citationChips = listOf(
                     CitationChip("Daily Schedule Sheet", "Sheet", dailyScheduleSheetId),
-                    CitationChip("Gmail: Trident Quote", "Mail", "thread-789"),
+                    CitationChip("SSIP 2.0 Grant Doc", "Doc", "Ref: 532"),
                     CitationChip("MSU Baroda Lab Slot", "Calendar", "cal-event-14")
                 )
             ),
             ChatMessage(
-                id = "msg-102",
+                id = "msg-101",
                 channelId = "command-center",
                 senderType = SenderType.SYSTEM,
                 text = "",
@@ -198,8 +247,23 @@ class HariomBotRepository {
                 handoff = BotHandoff(
                     fromBotId = "atlas",
                     toBotId = "reactor",
-                    taskTitle = "Audit Hardware Quotes & Compare Vendors for NocVita PBR Column",
-                    contextSummary = "Extracted specifications from Drive CAD (OD 60mm x 600mm, SS316 tri-clamp). Check Vexma, Soch3D, and Trident Labortek."
+                    taskTitle = "Audit Hardware Quotes & Compare Vendors for NocVi PBR Prototype",
+                    contextSummary = "Extracted specifications from Drive CAD (OD 60mm borosilicate, SS316 tri-clamp, 3D SLA baffles). Check Vexma, Soch3D, and Trident Labortek under SSIP 2.0 budget.",
+                    reasoning = "Reactor specializes in bioprocess hardware fabrication and vendor negotiations."
+                )
+            ),
+            ChatMessage(
+                id = "msg-102",
+                channelId = "command-center",
+                senderType = SenderType.BOT,
+                botId = "reactor",
+                text = "🫧 **Reactor on duty!** I audited our component quotes for the NocVi photobioreactor column. **Trident Labortek** and **Vexma** give us the optimal student-startup rate under our ₹60,000 Month-1 SSIP budget:",
+                timestamp = "08:35 AM",
+                scorecard = pbrScorecard,
+                stepsUsed = listOf(
+                    "Parsed Vexma 3D SLA biocompatible resin quote",
+                    "Extracted Trident Labortek ISO 3585 borosilicate specs",
+                    "Calculated student-startup discount savings (₹2,100)"
                 )
             ),
             ChatMessage(
@@ -207,289 +271,252 @@ class HariomBotRepository {
                 channelId = "command-center",
                 senderType = SenderType.BOT,
                 botId = "reactor",
-                text = "🔬 **Reactor on duty.** Audited the quotes for NocVita's oscillatory flow photobioreactor column.\n\nHere is the comparative scorecard for our Borosilicate 3.3 column and CNC-machined SS316 multi-port caps. **Trident Labortek** has the best price-to-spec ratio with their 15% academic/startup discount and direct dispatch to Vadodara.",
-                timestamp = "08:35 AM",
-                scorecard = pbrScorecard
+                text = "Per our **Read vs. Write Security Boundary**, I have held the outbound RFQ email in the **High-Fives (Approvals)** gate. You can review and execute it with one tap:",
+                timestamp = "08:36 AM",
+                approvalAction = initialApprovals[0]
             ),
             ChatMessage(
                 id = "msg-104",
                 channelId = "command-center",
                 senderType = SenderType.BOT,
-                botId = "reactor",
-                text = "Because this involves an outbound email to vendor sales, our **Read vs. Write Security Boundary** has queued this draft in the **Approvals Gate**. You can review and execute it below or in Tab 2:",
-                timestamp = "08:36 AM",
-                approvalAction = initialApprovals[0]
-            ),
-            ChatMessage(
-                id = "msg-105",
-                channelId = "command-center",
-                senderType = SenderType.BOT,
                 botId = "helix",
-                text = "🧬 **Helix reporting:**\n\n1. **I-STEM Portal Alert:** Sensed new slot availability for ICP-MS at the central analytical facility for Thursday. Created pending calendar booking card.\n2. **GBRC Portal:** MALDI-TOF identification queue for spent coffee grounds bacterial isolates is scheduled.\n3. **Manuscript Status:** *The Geometric-Information Limit: Stochastic Synchronization in Compartmentalized Microbial Populations* — Editorial Manager shows 'Under Review' (Nonlinear Science). No revision requests yet.",
+                text = "🧬 **Helix reporting:**\n\n• **Riverine Surveillance:** Our 14 bacterial isolates from Mahi, Vishwamitri & Bhogavo rivers showed a mean MAR index of 0.29. Sensed an ICP-MS opening on the I-STEM portal for Thursday morning.\n• **Portal Takeover Card:** Because I-STEM requires human login & CAPTCHA verification, I have set up this interactive takeover checklist for you:",
                 timestamp = "09:02 AM",
+                portalTakeover = portalChecklist,
+                stepsUsed = listOf(
+                    "Checked I-STEM facility slot calendar",
+                    "Formatted sample prep protocol for ICP-MS",
+                    "Loaded MSU Baroda institutional billing profile"
+                ),
                 citationChips = listOf(
-                    CitationChip("I-STEM Booking Portal", "Portal", "istem-portal.gov.in"),
-                    CitationChip("GBRC Portal", "Portal", "gbrc.res.in"),
-                    CitationChip("Editorial Manager: NS-2026", "Doc", "em-track-552")
+                    CitationChip("I-STEM Portal", "Portal", "istem-portal.gov.in"),
+                    CitationChip("Mahi/Vishwamitri MAR Data", "Doc", "AMR-Surveillance-v2")
                 )
-            ),
-            ChatMessage(
-                id = "msg-106",
-                channelId = "command-center",
-                senderType = SenderType.BOT,
-                botId = "pulse",
-                text = "📈 **Pulse Content Studio:**\n\nContent Schedule Sheet is on track for the **Thursday-to-Wednesday cycle**:\n• **Thursday (Today):** Researching verified statistics & SEO keyword density on bio-inspired wastewater treatment and microalgae bioreactors.\n• **Friday (Tomorrow):** Full Google Doc draft + visual carousel brief.\n• **Saturday:** LinkedIn post on NocVita's oscillatory flow fluidics advantages.",
-                timestamp = "09:18 AM",
-                citationChips = listOf(
-                    CitationChip("Content Schedule Sheet", "Sheet", contentScheduleSheetId)
-                )
-            )
-        )
-
-        // Reactor direct channel
-        val reactorMsgs = listOf(
-            ChatMessage(
-                id = "msg-r1",
-                channelId = "reactor",
-                senderType = SenderType.BOT,
-                botId = "reactor",
-                text = "👋 Hello Hariom. I am tracking all hardware components for **NocVita** and the **Blue Biorefinery**.\n\nCurrent priorities:\n1. Borosilicate glass columns (OD 60mm, wall 3.2mm, ISO 3585)\n2. SS316 multi-port tri-clamp endcaps\n3. Helical oscillatory flow fluidic baffles (Vexma 3D SLA)\n\nPending action: Trident Labortek RFQ follow-up is waiting in the Approvals queue.",
-                timestamp = "08:32 AM",
-                scorecard = pbrScorecard
-            )
-        )
-
-        // Helix direct channel
-        val helixMsgs = listOf(
-            ChatMessage(
-                id = "msg-h1",
-                channelId = "helix",
-                senderType = SenderType.BOT,
-                botId = "helix",
-                text = "🧬 Welcome to the Research & Lab Operations channel.\n\n• **MSU Baroda:** Department of Microbiology research on stochastic synchronization.\n• **Upcoming Deadlines:** ICWS 2026 (Water Sustainability) & XXII INQUA Congress 2027.\n• **Biomolecular modeling:** Boltz-1 (BoltzMol-1 / BoltzProt-1) ready for receptor-ligand docking notes.\n• **Portal Takeover Checklist:** Whenever logging into I-STEM or GBRC with CAPTCHA, I will prompt you for a quick browser takeover.",
-                timestamp = "08:40 AM"
-            )
-        )
-
-        // Pulse direct channel
-        val pulseMsgs = listOf(
-            ChatMessage(
-                id = "msg-p1",
-                channelId = "pulse",
-                senderType = SenderType.BOT,
-                botId = "pulse",
-                text = "📊 Content Studio active.\n\nOur weekly cadence:\n• **Thu:** Deep-dive research & outline\n• **Fri:** Full Google Doc draft\n• **Sat:** LinkedIn carousel breakdown\n• **Sun:** High-retention Instagram Reels captions & hooks\n• **Mon/Wed:** Polish, metrics review, next cycle queue.",
-                timestamp = "08:45 AM"
-            )
-        )
-
-        // Forge direct channel
-        val forgeMsgs = listOf(
-            ChatMessage(
-                id = "msg-f1",
-                channelId = "forge",
-                senderType = SenderType.BOT,
-                botId = "forge",
-                text = "⚙️ Forge ready.\n\nI generate:\n• Python bioprocess simulations (Reynolds numbers, shear stress equations for oscillatory baffled reactors)\n• LaTeX equations & tables for manuscripts\n• GitHub-ready specs syncing with **Google Antigravity** via Tab 5.",
-                timestamp = "08:50 AM"
-            )
-        )
-
-        // Atlas direct channel
-        val atlasMsgs = listOf(
-            ChatMessage(
-                id = "msg-a1",
-                channelId = "atlas",
-                senderType = SenderType.BOT,
-                botId = "atlas",
-                text = "🌐 Chief of Staff Atlas here.\n\nI monitor your Daily Schedule, Google Calendar, Google Tasks, and Gmail. Use `/briefing` for a complete workspace status report or `/interview` to run the 1-question-at-a-time business context capture.",
-                timestamp = "08:25 AM"
             )
         )
 
         _messages.value = mapOf(
             "command-center" to commandCenterMsgs,
-            "atlas" to atlasMsgs,
-            "reactor" to reactorMsgs,
-            "helix" to helixMsgs,
-            "pulse" to pulseMsgs,
-            "forge" to forgeMsgs
+            "atlas" to listOf(
+                ChatMessage(
+                    id = "msg-a1",
+                    channelId = "atlas",
+                    senderType = SenderType.BOT,
+                    botId = "atlas",
+                    text = "🌟 **Atlas Chief of Staff:** Your daily coordinator across NocVita, MSU Baroda, and SSIP 2.0. Type `/brief` for a fresh overview or `/interview` to capture current thoughts.",
+                    timestamp = "08:25 AM"
+                )
+            ),
+            "reactor" to listOf(
+                ChatMessage(
+                    id = "msg-r1",
+                    channelId = "reactor",
+                    senderType = SenderType.BOT,
+                    botId = "reactor",
+                    text = "🫧 **Reactor:** Hardware & procurement station active. Sourcing borosilicate 3.3 columns, SS316 multi-port caps, and SLA baffles under the ₹2,48,000 SSIP 2.0 grant.",
+                    timestamp = "08:32 AM",
+                    scorecard = pbrScorecard
+                )
+            ),
+            "helix" to listOf(
+                ChatMessage(
+                    id = "msg-h1",
+                    channelId = "helix",
+                    senderType = SenderType.BOT,
+                    botId = "helix",
+                    text = "🧬 **Helix:** Research desk active. Tracking riverine AMR isolates (mean MAR = 0.29), 'The Geometric-Information Limit' manuscript, and I-STEM / GBRC instrument bookings.",
+                    timestamp = "08:40 AM"
+                )
+            ),
+            "pulse" to listOf(
+                ChatMessage(
+                    id = "msg-p1",
+                    channelId = "pulse",
+                    senderType = SenderType.BOT,
+                    botId = "pulse",
+                    text = "🎧 **Pulse:** Content studio on track. Operating the Thursday-to-Wednesday cycle on the Content Schedule Google Sheet.",
+                    timestamp = "08:45 AM"
+                )
+            ),
+            "forge" to listOf(
+                ChatMessage(
+                    id = "msg-f1",
+                    channelId = "forge",
+                    senderType = SenderType.BOT,
+                    botId = "forge",
+                    text = "🤖 **Forge:** Antigravity coding bridge ready. Simulating oscillatory flow Reynolds numbers (Re_o > 300) and preparing GitHub sync files.",
+                    timestamp = "08:50 AM"
+                )
+            )
         )
 
-        // 4. Ongoing Responsibilities (Activity Tasks - Dots Activity View)
+        // 6. Activities (Dots Activity View)
         _activities.value = listOf(
             ActivityTask(
                 id = "act-01",
-                title = "NocVita Borosilicate Column Procurement",
+                title = "NocVi PBR Baffle Prototyping (SSIP 2.0)",
                 botId = "reactor",
                 status = ActivityStatus.RUNNING,
-                progress = 0.65f,
-                currentStep = "Awaiting human approval to dispatch RFQ to Trident Labortek",
+                progress = 0.70f,
+                currentStep = "Waiting for human approval to dispatch RFQ to Vexma & Soch3D",
                 stepIndex = 3,
                 totalSteps = 4,
                 logs = listOf(
-                    "08:12 AM - Scanned Google Drive for latest PBR CAD dimension tolerances",
-                    "08:22 AM - Searched Gmail for historical glassblower quotes in Vadodara",
-                    "08:34 AM - Compiled 4-way vendor scorecard (Trident, Vexma, Soch3D, BioKav)",
-                    "08:36 AM - Formatted RFQ follow-up email and pushed to Approvals Gate"
+                    "08:12 AM - Checked CAD dimension tolerances for helical baffle inserts",
+                    "08:25 AM - Scanned Vadodara 3D SLA suppliers for student/startup discounts",
+                    "08:35 AM - Compiled multi-vendor scorecard under SSIP 2.0 allocation",
+                    "08:36 AM - Formatted RFQ email and pushed to High-Fives gate"
                 ),
                 sourcesCited = listOf(
-                    "Drive: NocVita_PBR_v2.cad",
-                    "Gmail: RFQ_Trident_Proforma_789.pdf",
-                    "Vendor Catalog: Schott Duran 3.3 Specs"
+                    "Drive: NocVi_PBR_Baffles_v3.cad",
+                    "SSIP Grant Allocation Sheet (Row 6)",
+                    "Vexma Prototyping Catalog 2026"
                 )
             ),
             ActivityTask(
                 id = "act-02",
-                title = "MSU Baroda eDNA Manuscript Submission",
+                title = "Riverine AMR & Heavy Metal Profiling",
                 botId = "helix",
                 status = ActivityStatus.RUNNING,
                 progress = 0.85f,
-                currentStep = "Tracking reviewer response on Nonlinear Science portal",
+                currentStep = "I-STEM ICP-MS booking window ready for Thursday",
                 stepIndex = 4,
                 totalSteps = 5,
                 logs = listOf(
-                    "Oct 18 - Manuscript uploaded to Editorial Manager (ID: NS-2026-88)",
-                    "Oct 19 - Status changed to 'Under Review'",
-                    "Today - Verified reviewer deadline (Nov 15) and tracked cross-citations"
+                    "Oct 20 - Analyzed 14 MALDI-TOF isolates from Mahi, Vishwamitri & Bhogavo rivers",
+                    "Oct 22 - Calculated MAR index (mean = 0.29 across heavy-metal sites)",
+                    "Today - Prepared I-STEM analytical portal takeover checklist"
                 ),
                 sourcesCited = listOf(
-                    "Editorial Manager: NS-2026-88",
-                    "Docs: The_Geometric_Information_Limit_v4.docx"
+                    "GBRC MALDI-TOF Spectra: GBRC-2026-M42",
+                    "I-STEM Portal Facility Tracker",
+                    "Manuscript: AMR Surveillance in Gujarat Rivers"
                 )
             ),
             ActivityTask(
                 id = "act-03",
-                title = "Weekly Content Cycle (Blog & LinkedIn)",
+                title = "Thursday Content Cycle (Bioluminescent Algae)",
                 botId = "pulse",
                 status = ActivityStatus.RUNNING,
-                progress = 0.40f,
+                progress = 0.45f,
                 currentStep = "Drafting Friday Google Doc article with verified statistics",
                 stepIndex = 2,
                 totalSteps = 5,
                 logs = listOf(
-                    "08:40 AM - Analyzed trending topics in wastewater remediation on Google Scholar",
+                    "08:40 AM - Queried Google Scholar for recent microalgae carbon sequestration data",
                     "09:10 AM - Generated 5 high-retention LinkedIn hooks for Saturday post",
-                    "09:25 AM - Outlined 1,400-word blog post on oscillatory flow fluidics"
+                    "09:25 AM - Drafted row update for Content Schedule Google Sheet"
                 ),
                 sourcesCited = listOf(
-                    "Sheet: Content Schedule (Row 42)",
+                    "Content Schedule Sheet (Row 43)",
                     "Web: Water Research & Bioreactor kinetics 2026"
                 )
             )
         )
 
-        // 5. Standing Routines
+        // 7. Standing Routines (Matching Prompt 4.3)
         _routines.value = listOf(
             Routine(
                 id = "rtn-01",
                 title = "Daily 8:30 AM Morning Briefing",
                 botId = "atlas",
                 scheduleText = "Every day · 08:30 AM IST (Asia/Kolkata)",
-                description = "Autonomous read-only sweep of Gmail, Daily Schedule Sheet, Google Calendar, and pending approvals. Posts summary in Command Center.",
+                description = "Autonomous read-only sweep across Gmail, Daily Schedule Sheet, Google Calendar, and pending approvals. Displays Bento summary in Command Center.",
                 isEnabled = true,
                 lastRunText = "Today at 08:30 AM IST",
                 status = RoutineStatus.SUCCESS
             ),
             Routine(
                 id = "rtn-02",
-                title = "Tue/Fri 4:00 PM NocVita Vendor & Quote Tracker",
+                title = "Tue/Fri 4:00 PM NocVita RFQ & SSIP Tracker",
                 botId = "reactor",
                 scheduleText = "Tuesdays & Fridays · 04:00 PM IST",
-                description = "Scans Gmail for vendor quotes, cross-checks material specifications, updates scorecard, and queues RFQ replies for human review.",
+                description = "Scans Gmail for supplier responses, checks SSIP 2.0 prototyping bill compliance, and updates the vendor comparison scorecard.",
                 isEnabled = true,
                 lastRunText = "Friday at 04:00 PM IST",
                 status = RoutineStatus.IDLE
             ),
             Routine(
                 id = "rtn-03",
-                title = "Thursday 10:00 AM Weekly Content Kickoff",
+                title = "Wed 2:00 PM Lab & Manuscript Pulse",
+                botId = "helix",
+                scheduleText = "Wednesdays · 02:00 PM IST",
+                description = "Checks Editorial Manager journal reviews (Nonlinear Science) and GBRC / I-STEM analytical slot availabilities.",
+                isEnabled = true,
+                lastRunText = "Wednesday at 02:00 PM IST",
+                status = RoutineStatus.IDLE
+            ),
+            Routine(
+                id = "rtn-04",
+                title = "Thu 10:00 AM Content Studio Kickoff",
                 botId = "pulse",
                 scheduleText = "Thursdays · 10:00 AM IST",
-                description = "Reads Content Schedule Sheet, performs SEO & research sweep, outlines Friday blog draft, and schedules Saturday/Sunday social posts.",
+                description = "Reads Content Schedule Sheet, initiates SEO sweep, prepares Friday Google Doc draft, and generates LinkedIn carousel outline.",
                 isEnabled = true,
-                lastRunText = "Today at 10:00 AM IST",
+                lastRunText = "Thursday at 10:00 AM IST",
                 status = RoutineStatus.IDLE
             )
         )
 
-        // 6. Memories (Cross-session knowledge bank)
+        // 8. Memories (Matching Prompt 3.1)
         _memories.value = listOf(
             MemoryItem(
-                id = "mem-01",
-                fact = "NocVita develops oscillatory flow photobioreactors (PBR) featuring helical baffles for high-density microalgae cultivation (Chlorella sp.) and wastewater remediation.",
+                id = "mem-ssip-01",
+                fact = "Approved ₹2,48,000 SSIP 2.0 Grant (Ref: SSIP 2.0/2026-27/532) at MSU Baroda for 'Bioluminescent Photobioreactor' (NocVi) with co-innovator Arnav Dhamdhere and mentor Dr. Devarshi Gajjar. Incubated at STBI Savli with problem validation from Sandoz Agri-India.",
                 category = MemoryCategory.NOCVITA,
-                confidence = 99,
-                source = "NocVita Master Architecture Doc",
-                timestamp = "Oct 18, 2026",
-                tags = listOf("PBR", "Hardware", "Microalgae", "Oscillatory Flow")
+                confidence = 100,
+                source = "SSIP 2.0 Grant Sanction Letter",
+                timestamp = "Oct 20, 2026",
+                tags = listOf("SSIP 2.0", "NocVi", "STBI Savli", "Sandoz", "₹2,48,000")
             ),
             MemoryItem(
-                id = "mem-02",
-                fact = "PBR Column physical specs: Borosilicate glass tube OD 60mm, wall 3.2mm, length 600mm, with SS316 multi-port tri-clamp sanitary endcaps.",
+                id = "mem-blue-02",
+                fact = "Blue Biorefinery Project: Developing mannooligosaccharides (MOS) extraction from spent coffee grounds in collaboration with Bills Biotech.",
                 category = MemoryCategory.NOCVITA,
                 confidence = 98,
-                source = "Drive: NocVita_PBR_v2.cad",
-                timestamp = "Oct 19, 2026",
-                tags = listOf("Borosilicate", "SS316", "Dimensions", "Trident")
+                source = "Bills Biotech Partnership Brief",
+                timestamp = "Oct 18, 2026",
+                tags = listOf("Blue Biorefinery", "Coffee Grounds", "MOS", "Bills Biotech")
             ),
             MemoryItem(
-                id = "mem-03",
-                fact = "Hariom Pathak is a researcher at Department of Microbiology, Faculty of Science, The Maharaja Sayajirao University of Baroda (MSU Baroda), Gujarat.",
+                id = "mem-amr-03",
+                fact = "Research & Manuscripts: Co-authoring 'The Geometric-Information Limit' (stochastic synchronization in compartmentalized microbial populations), riverine AMR & heavy-metal surveillance across Mahi, Vishwamitri & Bhogavo rivers (14 MALDI-TOF isolates, mean MAR = 0.29), and sedimentary eDNA for XXII INQUA Congress 2027.",
                 category = MemoryCategory.RESEARCH_LABS,
-                confidence = 100,
-                source = "User Profile",
-                timestamp = "Oct 15, 2026",
-                tags = listOf("MSU Baroda", "Microbiology", "Vadodara")
-            ),
-            MemoryItem(
-                id = "mem-04",
-                fact = "Research manuscript 'The Geometric-Information Limit: Stochastic Synchronization in Compartmentalized Microbial Populations' is under review at Nonlinear Science.",
-                category = MemoryCategory.RESEARCH_LABS,
-                confidence = 97,
-                source = "Editorial Manager: NS-2026-88",
-                timestamp = "Oct 19, 2026",
-                tags = listOf("Manuscript", "Nonlinear Science", "Synchronization")
-            ),
-            MemoryItem(
-                id = "mem-05",
-                fact = "Upcoming targeted conferences: ICWS 2026 (Water Sustainability) and XXII INQUA Congress 2027 (sedimentary eDNA findings).",
-                category = MemoryCategory.RESEARCH_LABS,
-                confidence = 95,
-                source = "Calendar Deadlines",
-                timestamp = "Oct 16, 2026",
-                tags = listOf("ICWS 2026", "INQUA 2027", "eDNA")
-            ),
-            MemoryItem(
-                id = "mem-06",
-                fact = "Weekly Content Cadence: Thursday (Research/Outline) -> Friday (Google Doc Draft) -> Saturday (LinkedIn Carousel) -> Sunday (Instagram Reels) -> Mon/Wed (Feedback & Cycle Update).",
-                category = MemoryCategory.CONTENT,
                 confidence = 99,
-                source = "Content Schedule Google Sheet",
-                timestamp = "Oct 17, 2026",
-                tags = listOf("Cadence", "LinkedIn", "Instagram", "Blog")
+                source = "MSU Microbiology Research Dossier",
+                timestamp = "Oct 22, 2026",
+                tags = listOf("MSU Baroda", "MAR Index", "Mahi River", "INQUA 2027", "eDNA")
             ),
             MemoryItem(
-                id = "mem-07",
-                fact = "Primary user location is Vadodara/Gandhinagar, Gujarat, India (Timezone: Asia/Kolkata). Always format time in IST with 12h/24h precision.",
-                category = MemoryCategory.PERSONAL_PREFS,
-                confidence = 100,
-                source = "System Configuration",
-                timestamp = "Oct 15, 2026",
-                tags = listOf("Timezone", "Asia/Kolkata", "Gujarat")
+                id = "mem-pbr-04",
+                fact = "PBR column engineering specs: Borosilicate glass tube OD 60mm, wall 3.2mm, length 600mm, SS316 multi-port tri-clamp sanitary endcaps, and 3D SLA biocompatible fluidic baffles.",
+                category = MemoryCategory.NOCVITA,
+                confidence = 98,
+                source = "Drive: NocVi_PBR_v3.cad",
+                timestamp = "Oct 19, 2026",
+                tags = listOf("Borosilicate 3.3", "SS316", "3D SLA", "Dimensions")
             ),
             MemoryItem(
-                id = "mem-08",
-                fact = "Strict Security Gate: Read tools run autonomously during chat and routines; all write/mutating actions across Gmail, Calendar, Sheets, Docs, and Tasks MUST pause for human approval.",
+                id = "mem-sheets-05",
+                fact = "Google Workspace Connected Sheets: Daily Schedule Sheet (ID: 1hqA9AyxxWv6B9HlPPfLumetfhSzduUZc22dPD0AzxYk) and Content Schedule Sheet (ID: 1XpHiWo6J_RVBsNN5ZgnWKUr9FDgX_cTNhIDYKZvHMEw).",
                 category = MemoryCategory.PERSONAL_PREFS,
                 confidence = 100,
-                source = "Security Policy",
+                source = "System Environment",
+                timestamp = "Oct 24, 2026",
+                tags = listOf("Google Sheets", "Daily Schedule", "Content Schedule")
+            ),
+            MemoryItem(
+                id = "mem-security-06",
+                fact = "Strict Read vs. Write Security Gate: Autonomous execution for all read operations; human approval mandatory before any outbound email, calendar modification, or sheet edit.",
+                category = MemoryCategory.PERSONAL_PREFS,
+                confidence = 100,
+                source = "Security Governance",
                 timestamp = "Oct 15, 2026",
-                tags = listOf("Security", "Approvals", "Auto-Review")
+                tags = listOf("Security", "Approvals Gate", "Zero-Trust")
             )
         )
 
-        // 7. Skills Library (SKILL.md Reusable procedures)
+        // 9. Skills Library (Matching Prompt 4.4)
         _skills.value = listOf(
             SkillItem(
                 id = "skl-01",
@@ -499,76 +526,76 @@ class HariomBotRepository {
                 triggerRule = "When Hariom asks for parts procurement, glassblowing, laser-cutting, or 3D-printing quotes.",
                 requiredTools = listOf("gmail/search", "drive/read_cad", "sheets/vendor_scorecard"),
                 instructions = """
-                    1. Extract exact CAD tolerances, material grades (e.g. Borosilicate 3.3, SS316, Cast Acrylic), and quantities.
-                    2. Search Gmail for historical quotes from Trident Labortek, Vexma, Soch3D, BioKav, Amerging Tech, or IndiaMART.
-                    3. Compile a markdown table comparing: Unit Price (INR), Material Spec, Student/Startup Discount, Lead Time, and Vadodara/Gandhinagar Delivery.
+                    1. Extract exact CAD tolerances, material grades (Borosilicate 3.3, SS316, 3D SLA resin), and quantities.
+                    2. Search Gmail for historical quotes from Trident Labortek, Vexma, Soch3D, BioKav, or IndiaMART.
+                    3. Compile a comparison table with: Unit Price (INR), Material Spec, Student/Startup Discount, Lead Time, and Vadodara/Gandhinagar Delivery.
                     4. Draft technical RFQ email and hold for human approval before sending.
                 """.trimIndent(),
                 lastExecuted = "Today, 08:35 AM"
             ),
             SkillItem(
                 id = "skl-02",
-                slug = "lab-instrument-booking",
+                slug = "ssip-bill-compliance",
+                title = "SSIP 2.0 Bill & Voucher Compliance",
+                summary = "Audit vendor invoices for MSU Baroda SSIP 2.0 grant accounting and STBI Savli reporting.",
+                triggerRule = "When reviewing proforma invoices, GST receipts, or allocation ceilings.",
+                requiredTools = listOf("gmail/extract_invoice", "sheets/ssip_ledger"),
+                instructions = """
+                    1. Check GSTIN validity for supplier.
+                    2. Ensure quotation item matches approved SSIP 2.0 prototyping tranche.
+                    3. Attach student-startup declaration and route for approval.
+                """.trimIndent(),
+                lastExecuted = "Yesterday, 04:15 PM"
+            ),
+            SkillItem(
+                id = "skl-03",
+                slug = "istem-gbrc-slot-prep",
                 title = "I-STEM & GBRC Instrument Slot Prep",
                 summary = "Check analytical equipment availability and prepare proforma invoice verification.",
                 triggerRule = "When scheduling ICP-MS, MALDI-TOF, or NGS sequencing runs.",
                 requiredTools = listOf("istem_portal/check", "gbrc_portal/check", "calendar/event_draft"),
                 instructions = """
-                    1. Check target instrument availability (ICP-MS for heavy metal wastewater remediation, MALDI-TOF for microbial isolate ID).
+                    1. Check target instrument availability (ICP-MS for heavy metals, MALDI-TOF for microbial ID).
                     2. If login or CAPTCHA appears, trigger Portal Takeover Checklist for Hariom.
                     3. Calculate user charges according to MSU Baroda academic category.
                     4. Create pending calendar block in Approvals Gate. Never finalize booking payment automatically.
                 """.trimIndent(),
-                lastExecuted = "Today, 09:15 AM"
+                lastExecuted = "Today, 09:02 AM"
             ),
             SkillItem(
-                id = "skl-03",
-                slug = "weekly-content-pipeline",
+                id = "skl-04",
+                slug = "weekly-content-cycle",
                 title = "Weekly Content Cycle (Blog, LinkedIn, Instagram)",
                 summary = "Execute the Thursday-to-Wednesday content research, writing, and scheduling loop.",
                 triggerRule = "Triggered by Thursday 10:00 AM routine or on-demand /content command.",
                 requiredTools = listOf("sheets/read_content_calendar", "docs/create_draft", "web/search_scholar"),
                 instructions = """
                     1. Read Content Schedule Google Sheet for the current week's anchor theme.
-                    2. Thursday: Perform SEO & citation research on Google Scholar/arXiv.
-                    3. Friday: Write complete 1,200-1,500 word blog draft with subheadings and graphics brief in Google Docs.
-                    4. Saturday: Draft 1 high-retention LinkedIn post (Hook, Problem, Technical Solution, Carousel outline, CTA).
-                    5. Sunday: Draft Instagram Reels captions with timestamps and hashtag sets.
+                    2. Thursday: Perform SEO & citation research on Google Scholar.
+                    3. Friday: Write complete 1,400-word blog draft with subheadings in Google Docs.
+                    4. Saturday: Draft 1 high-retention LinkedIn post + 5 carousel slides.
+                    5. Sunday: Draft Instagram Reels captions with hooks and hashtag sets.
                     6. Submit all drafts to Approvals queue.
                 """.trimIndent(),
-                lastExecuted = "Today, 09:30 AM"
-            ),
-            SkillItem(
-                id = "skl-04",
-                slug = "skill-creator",
-                title = "Teach a Task / Skill Creator (/learn)",
-                summary = "Turn a demonstrated or discussed workflow into a permanent, reusable saved skill.",
-                triggerRule = "When Hariom types /learn or asks to save a recurring workflow as a skill.",
-                requiredTools = listOf("memory/extract_rules", "skills/save_skill"),
-                instructions = """
-                    1. Extract the trigger condition, input parameters, decision boundaries, and required tools from conversation history.
-                    2. Draft a structured SKILL.md specification with title, summary, step-by-step execution procedure, and safety gates.
-                    3. Present the drafted skill card in chat and save into the Firestore skills collection upon approval.
-                """.trimIndent(),
-                lastExecuted = "Yesterday, 06:14 PM"
+                lastExecuted = "Today, 09:15 AM"
             ),
             SkillItem(
                 id = "skl-05",
-                slug = "find-a-document",
-                title = "Search & Read Workspace Files",
-                summary = "Search connected Google Drive folders and Sheets before answering.",
-                triggerRule = "Whenever context requires NocVita CAD, MSU manuscript text, or schedule rows.",
-                requiredTools = listOf("drive/search_files", "sheets/read_rows"),
+                slug = "boltz-alphafold-prep",
+                title = "Boltz API & AlphaFold Biomolecular Modeling",
+                summary = "Format input FASTA sequences and ligand SMILES for structural biology runs.",
+                triggerRule = "When running protein-ligand docking or conformational simulations.",
+                requiredTools = listOf("keep/read_notes", "boltz_api/prepare_input"),
                 instructions = """
-                    1. Search Google Drive roots: NocVita, Research, Content Schedule, Schedule.
-                    2. Read the full file content rather than hallucinating from titles.
-                    3. Cite the exact file name and link chip in the message output.
+                    1. Parse protein sequence and target ligand structure.
+                    2. Prepare BoltzMol-1 and BoltzProt-1 configuration files.
+                    3. Log parameters into Google Keep for MSU Baroda thesis documentation.
                 """.trimIndent(),
-                lastExecuted = "Today, 08:30 AM"
+                lastExecuted = "Oct 21, 2026"
             )
         )
 
-        // 8. Workspace Connections
+        // 10. Workspace Connections
         _workspaceConnections.value = listOf(
             WorkspaceConnection(
                 id = "ws-gmail",
@@ -576,39 +603,39 @@ class HariomBotRepository {
                 isConnected = true,
                 statusText = "Connected · Active Sync",
                 lastSyncText = "Synced 2 mins ago",
-                details = "Scanned inbox: 4 unread threads triaged. Outbound emails strictly gated by Approvals."
+                details = "Scanned inbox: 3 vendor quotes triaged (Vexma, Soch3D, Trident). Outbound drafts held for approval."
             ),
             WorkspaceConnection(
                 id = "ws-calendar",
                 type = WorkspaceServiceType.CALENDAR,
                 isConnected = true,
                 statusText = "Connected · Asia/Kolkata",
-                lastSyncText = "Synced 5 mins ago",
-                details = "Upcoming: 3:30 PM MSU Baroda Microbiology Lab Slot. Events require human approval to create/edit."
+                lastSyncText = "Synced 4 mins ago",
+                details = "Upcoming: 3:30 PM MSU Baroda Microbiology Lab Slot. Events require approval."
             ),
             WorkspaceConnection(
                 id = "ws-sheets",
                 type = WorkspaceServiceType.SHEETS,
                 isConnected = true,
                 statusText = "Connected · 2 Sheets Linked",
-                lastSyncText = "Synced 10 mins ago",
+                lastSyncText = "Synced 8 mins ago",
                 resourceId = "$dailyScheduleSheetId | $contentScheduleSheetId",
-                details = "Daily Schedule Sheet (linked) & Content Schedule Sheet (linked). Row edits held for review."
+                details = "Daily Schedule (1hqA9A...) & Content Schedule (1XpHiW...) synced."
             ),
             WorkspaceConnection(
                 id = "ws-drive",
                 type = WorkspaceServiceType.DRIVE,
                 isConnected = true,
-                statusText = "Connected · Roots: NocVita, Research",
-                lastSyncText = "Synced 15 mins ago",
-                details = "Indexed 38 CAD/spec files, 12 manuscript drafts, and vendor quotation PDFs."
+                statusText = "Connected · Roots: NocVita, Research, SSIP",
+                lastSyncText = "Synced 12 mins ago",
+                details = "Indexed 42 CAD files (NocVi PBR), 14 manuscript drafts, and SSIP 2.0 grant vouchers."
             ),
             WorkspaceConnection(
                 id = "ws-tasks",
                 type = WorkspaceServiceType.TASKS,
                 isConnected = true,
-                statusText = "Connected · 5 Active Tasks",
-                lastSyncText = "Synced 8 mins ago",
+                statusText = "Connected · 4 Active Tasks",
+                lastSyncText = "Synced 6 mins ago",
                 details = "Synced with Google Tasks list 'Hariom Pathak Workspace'."
             ),
             WorkspaceConnection(
@@ -616,7 +643,7 @@ class HariomBotRepository {
                 type = WorkspaceServiceType.KEEP,
                 isConnected = true,
                 statusText = "Connected · Boltz Notes & Ideas",
-                lastSyncText = "Synced 20 mins ago",
+                lastSyncText = "Synced 15 mins ago",
                 details = "Synchronizing lab notes and biomolecular modeling parameters."
             )
         )
@@ -644,7 +671,11 @@ class HariomBotRepository {
         approvalAction: ApprovalAction? = null,
         handoff: BotHandoff? = null,
         scorecard: VendorScorecard? = null,
-        citationChips: List<CitationChip> = emptyList()
+        bentoBriefing: BentoBriefing? = null,
+        portalTakeover: PortalTakeoverCard? = null,
+        skillLearned: SkillLearnedCard? = null,
+        citationChips: List<CitationChip> = emptyList(),
+        stepsUsed: List<String> = emptyList()
     ) {
         val botMsg = ChatMessage(
             id = "msg-${System.currentTimeMillis()}",
@@ -656,14 +687,17 @@ class HariomBotRepository {
             approvalAction = approvalAction,
             handoff = handoff,
             scorecard = scorecard,
-            citationChips = citationChips
+            bentoBriefing = bentoBriefing,
+            portalTakeover = portalTakeover,
+            skillLearned = skillLearned,
+            citationChips = citationChips,
+            stepsUsed = stepsUsed
         )
         val currentList = _messages.value[channelId] ?: emptyList()
         val updatedMap = _messages.value.toMutableMap()
         updatedMap[channelId] = currentList + botMsg
         _messages.value = updatedMap
 
-        // If an approval is included, add it to approvals collection too
         if (approvalAction != null) {
             val curApps = _approvals.value
             if (curApps.none { it.id == approvalAction.id }) {
@@ -684,7 +718,6 @@ class HariomBotRepository {
                 )
             } else action
         }
-        // Update inline cards in messages
         updateMessageApproval(actionId, ApprovalStatus.APPROVED)
     }
 
@@ -693,7 +726,7 @@ class HariomBotRepository {
             if (action.id == actionId) {
                 action.copy(
                     status = ApprovalStatus.REJECTED,
-                    executionResult = "Action discarded by user."
+                    executionResult = "Action skipped by user."
                 )
             } else action
         }
@@ -753,8 +786,13 @@ class HariomBotRepository {
             channelId = "command-center",
             senderType = SenderType.BOT,
             botId = "atlas",
-            text = "💓 **Proactive Heartbeat Executed ($now IST)**\n\n• **Gmail Sweep:** Scanned unread messages. No critical blockers.\n• **Daily Schedule Sheet:** Row 14 verified for 3:30 PM MSU Baroda lab session.\n• **Content Sheet:** Week 42 topic verified.\n• **Approvals:** ${_approvals.value.count { it.status == ApprovalStatus.PENDING }} pending human action items remain in queue.",
+            text = "🌿 **Proactive Workspace Sweep Complete ($now IST)**\n\n• **Gmail:** 3 supplier quotes synced under SSIP 2.0 allocation.\n• **Daily Schedule Sheet:** 3:30 PM MSU Baroda microbiology session confirmed.\n• **Content Schedule Sheet:** Week 43 blog draft verified.\n• **High-Fives Gate:** ${_approvals.value.count { it.status == ApprovalStatus.PENDING }} action cards pending your authorization.",
             timestamp = now,
+            stepsUsed = listOf(
+                "Scanned Gmail inbox for new RFQ follow-ups",
+                "Queried Daily Schedule Sheet row 14",
+                "Checked Content Schedule Sheet row 43"
+            ),
             citationChips = listOf(
                 CitationChip("Daily Schedule Sheet", "Sheet", dailyScheduleSheetId),
                 CitationChip("Google Calendar", "Calendar", "cal-sync"),
@@ -766,10 +804,9 @@ class HariomBotRepository {
         updated["command-center"] = curList + heartbeatMsg
         _messages.value = updated
 
-        return "Heartbeat completed: Gmail, Calendar, and Sheets scanned autonomously."
+        return "Proactive Workspace Sweep complete: All sheets, inbox, and calendar scanned."
     }
 
-    // Activity Controls
     fun toggleTaskPause(taskId: String) {
         _activities.value = _activities.value.map { task ->
             if (task.id == taskId) {
@@ -779,13 +816,12 @@ class HariomBotRepository {
         }
     }
 
-    // Memory Actions
     fun addMemory(fact: String, category: MemoryCategory, tags: List<String>) {
         val newMem = MemoryItem(
             id = "mem-${System.currentTimeMillis()}",
             fact = fact,
             category = category,
-            confidence = 96,
+            confidence = 98,
             source = "Direct User Addition",
             timestamp = dateFormat.format(Date()),
             tags = tags
@@ -793,7 +829,6 @@ class HariomBotRepository {
         _memories.value = listOf(newMem) + _memories.value
     }
 
-    // Skill Actions
     fun addSkill(title: String, slug: String, summary: String, triggerRule: String, tools: List<String>, instructions: String) {
         val newSkill = SkillItem(
             id = "skl-${System.currentTimeMillis()}",
@@ -808,7 +843,6 @@ class HariomBotRepository {
         _skills.value = listOf(newSkill) + _skills.value
     }
 
-    // Update Bot status dynamically
     fun updateBotStatus(botId: String, status: BotStatus, currentAction: String, activeTool: String? = null) {
         _bots.value = _bots.value.map { bot ->
             if (bot.id == botId) {

@@ -1,6 +1,5 @@
 package com.example.ui.components
 
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -10,16 +9,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.automirrored.filled.ViewSidebar
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -27,26 +26,31 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.Bot
-import com.example.data.model.BotStatus
 import com.example.ui.theme.*
 
 @Composable
 fun TopRosterBar(
     bots: List<Bot>,
     selectedChannelId: String,
+    isNightMode: Boolean,
+    isStudioMode: Boolean,
     onSelectChannel: (String) -> Unit,
+    onToggleTheme: () -> Unit,
+    onToggleStudioMode: () -> Unit,
     onOpenVoiceCall: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val theme = LocalCozyTheme.current
+
     Surface(
-        color = Slate900,
-        tonalElevation = 6.dp,
+        color = theme.canvasBg,
+        tonalElevation = 3.dp,
         modifier = modifier
             .fillMaxWidth()
-            .border(width = 0.5.dp, color = Slate800)
+            .border(width = 0.5.dp, color = theme.cardBorder)
     ) {
         Column(modifier = Modifier.padding(top = 8.dp, bottom = 10.dp)) {
-            // Header Row: App Identity & Voice Call Action
+            // Header Row: App Identity, Theme Toggle, Studio Toggle, Voice Call
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -54,64 +58,119 @@ fun TopRosterBar(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
+                // Identity
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .size(28.dp)
+                            .size(32.dp)
                             .clip(CircleShape)
-                            .background(
-                                Brush.linearGradient(
-                                    listOf(Emerald400, Cyan400, Indigo500)
-                                )
-                            ),
+                            .background(ReactorPrimary.copy(alpha = 0.2f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("H", color = Slate950, fontWeight = FontWeight.Black, fontSize = 16.sp)
+                        Text("🌿", fontSize = 16.sp)
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
-                        Text(
-                            text = "HariomBot",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = Slate100,
-                                fontSize = 16.sp
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "HBot",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Black,
+                                    color = theme.textPrimary,
+                                    fontSize = 17.sp
+                                )
                             )
-                        )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Surface(
+                                color = ReactorLight,
+                                shape = RoundedCornerShape(6.dp)
+                            ) {
+                                Text(
+                                    text = "v2 Cozy",
+                                    color = ReactorDark,
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                )
+                            }
+                        }
                         Text(
-                            text = "NocVita & MSU Baroda Workspace",
+                            text = "NocVita & MSU Baroda",
                             style = MaterialTheme.typography.labelSmall.copy(
-                                color = Slate400,
-                                fontSize = 11.sp
+                                color = theme.textSecondary,
+                                fontSize = 10.sp
                             )
                         )
                     }
                 }
 
-                // Live Voice Call button
-                FilledTonalButton(
-                    onClick = onOpenVoiceCall,
-                    shape = RoundedCornerShape(20.dp),
-                    colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = Slate800,
-                        contentColor = Cyan400
-                    ),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                    modifier = Modifier.testTag("voice_call_button")
+                // Header Action Pill Cluster
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Phone,
-                        contentDescription = "Live Voice Call",
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Voice Live", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    // Studio Mode Toggle
+                    IconButton(
+                        onClick = onToggleStudioMode,
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(theme.cardSurface)
+                            .border(0.8.dp, theme.cardBorder, CircleShape)
+                            .testTag("studio_mode_toggle")
+                    ) {
+                        Icon(
+                            imageVector = if (isStudioMode) Icons.AutoMirrored.Filled.ViewSidebar else Icons.Default.Smartphone,
+                            contentDescription = "Toggle Studio Mode",
+                            tint = if (isStudioMode) theme.accentPrimary else theme.textSecondary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+
+                    // 1-Tap Theme Toggle (Matcha & Oatmilk vs Bioluminescent Night)
+                    IconButton(
+                        onClick = onToggleTheme,
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(theme.cardSurface)
+                            .border(0.8.dp, theme.cardBorder, CircleShape)
+                            .testTag("theme_toggle_button")
+                    ) {
+                        Icon(
+                            imageVector = if (isNightMode) Icons.Default.LightMode else Icons.Default.DarkMode,
+                            contentDescription = "Toggle Theme",
+                            tint = if (isNightMode) BioluminescentAmber else WarmStoneText,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+
+                    // Live Voice Call button
+                    FilledTonalButton(
+                        onClick = onOpenVoiceCall,
+                        shape = RoundedCornerShape(20.dp),
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = theme.cardSurface,
+                            contentColor = theme.accentPrimary
+                        ),
+                        border = androidx.compose.foundation.BorderStroke(0.8.dp, theme.cardBorder),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                        modifier = Modifier.testTag("voice_call_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Phone,
+                            contentDescription = "Live Voice Call",
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Voice", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            // Horizontal Scrollable Roster Bar (Presence as Interface)
+            // Horizontal Scrollable Living Bot Mascot Roster Bar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -121,138 +180,42 @@ fun TopRosterBar(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 bots.forEach { bot ->
-                    BotRosterItem(
-                        bot = bot,
-                        isSelected = bot.id == selectedChannelId,
-                        onClick = { onSelectChannel(bot.id) }
-                    )
+                    val isSelected = bot.id == selectedChannelId
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .clickable { onSelectChannel(bot.id) }
+                            .background(if (isSelected) theme.cardSurface else Color.Transparent)
+                            .border(
+                                width = if (isSelected) 1.2.dp else 0.dp,
+                                color = if (isSelected) theme.accentPrimary else Color.Transparent,
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                            .padding(horizontal = 8.dp, vertical = 6.dp)
+                            .testTag("bot_roster_${bot.id}")
+                    ) {
+                        BotMascot(
+                            botId = bot.id,
+                            state = bot.status.toMascotState(),
+                            size = 46.dp
+                        )
+
+                        Spacer(modifier = Modifier.height(2.dp))
+
+                        Text(
+                            text = bot.name,
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) theme.textPrimary else theme.textSecondary,
+                                fontSize = 11.sp
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun BotRosterItem(
-    bot: Bot,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    // Status animated border
-    val infiniteTransition = rememberInfiniteTransition(label = "roster_orbit")
-    val rotation by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(4000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "orbit"
-    )
-
-    val pulseScale by infiniteTransition.animateFloat(
-        initialValue = 0.95f,
-        targetValue = 1.05f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1500, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "pulse"
-    )
-
-    val borderModifier = when (bot.status) {
-        BotStatus.THINKING -> Modifier
-            .rotate(rotation)
-            .border(
-                width = 2.dp,
-                brush = Brush.sweepGradient(listOf(Indigo500, Cyan400, Indigo500)),
-                shape = CircleShape
-            )
-        BotStatus.WORKING -> Modifier
-            .border(
-                width = 2.dp,
-                color = Emerald400,
-                shape = CircleShape
-            )
-        BotStatus.WAITING_APPROVAL -> Modifier
-            .border(
-                width = 2.dp,
-                color = Amber400,
-                shape = CircleShape
-            )
-        else -> if (isSelected) {
-            Modifier.border(2.dp, Cyan400, CircleShape)
-        } else {
-            Modifier.border(1.dp, Slate700, CircleShape)
-        }
-    }
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
-            .background(if (isSelected) Slate800 else Color.Transparent)
-            .padding(horizontal = 6.dp, vertical = 4.dp)
-            .testTag("bot_roster_${bot.id}")
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            // Outer Ring
-            Box(
-                modifier = Modifier
-                    .size(46.dp)
-                    .then(borderModifier)
-                    .clip(CircleShape)
-                    .background(Slate850),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = bot.avatarEmoji,
-                    fontSize = 20.sp
-                )
-            }
-
-            // Status Indicator Dot or Badge
-            Box(
-                modifier = Modifier
-                    .size(12.dp)
-                    .align(Alignment.BottomEnd)
-                    .clip(CircleShape)
-                    .background(bot.status.color)
-                    .border(1.5.dp, Slate900, CircleShape)
-            )
-
-            // Needs Approval Badge count
-            if (bot.unreadCount > 0) {
-                Box(
-                    modifier = Modifier
-                        .size(16.dp)
-                        .align(Alignment.TopEnd)
-                        .clip(CircleShape)
-                        .background(Amber500),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = bot.unreadCount.toString(),
-                        color = Slate950,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        Text(
-            text = bot.name,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                color = if (isSelected) Slate100 else Slate400,
-                fontSize = 11.sp
-            ),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
     }
 }

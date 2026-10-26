@@ -1,7 +1,6 @@
 package com.example.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,16 +32,18 @@ fun InlineApprovalCard(
     onEditAndApprove: (String, Map<String, String>) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val theme = LocalCozyTheme.current
     var isEditing by remember { mutableStateOf(false) }
     var editedFields by remember(action) { mutableStateOf(action.fields) }
 
     Surface(
-        color = Slate850,
-        shape = RoundedCornerShape(16.dp),
+        color = theme.cardSurface,
+        shape = RoundedCornerShape(22.dp),
         border = androidx.compose.foundation.BorderStroke(
             1.2.dp,
-            if (action.status == ApprovalStatus.PENDING) Amber400.copy(alpha = 0.6f) else Slate700
+            if (action.status == ApprovalStatus.PENDING) AtlasPrimary.copy(alpha = 0.7f) else theme.cardBorder
         ),
+        shadowElevation = 2.dp,
         modifier = modifier
             .fillMaxWidth()
             .testTag("approval_card_${action.id}")
@@ -56,14 +58,14 @@ fun InlineApprovalCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
+                            .clip(RoundedCornerShape(8.dp))
                             .background(Color(action.actionType.badgeColorHex))
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
                         Text(
                             text = action.actionType.label,
                             color = Color.White,
-                            fontSize = 11.sp,
+                            fontSize = 10.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -73,8 +75,8 @@ fun InlineApprovalCard(
                     Text(
                         text = "via @${action.requestingBotId}",
                         style = MaterialTheme.typography.labelSmall.copy(
-                            color = Cyan400,
-                            fontWeight = FontWeight.SemiBold
+                            color = theme.accentPrimary,
+                            fontWeight = FontWeight.Bold
                         )
                     )
                 }
@@ -84,14 +86,14 @@ fun InlineApprovalCard(
                     Icon(
                         imageVector = Icons.Default.Security,
                         contentDescription = "Review Gate",
-                        tint = if (action.status == ApprovalStatus.PENDING) Amber400 else Emerald400,
+                        tint = if (action.status == ApprovalStatus.PENDING) AtlasPrimary else ReactorPrimary,
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = if (action.status == ApprovalStatus.PENDING) "Review Required" else action.status.label,
+                        text = if (action.status == ApprovalStatus.PENDING) "High-Five Needed!" else action.status.label,
                         style = MaterialTheme.typography.labelSmall.copy(
-                            color = if (action.status == ApprovalStatus.PENDING) Amber400 else Emerald400,
+                            color = if (action.status == ApprovalStatus.PENDING) AtlasPrimary else ReactorPrimary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 10.sp
                         )
@@ -106,7 +108,7 @@ fun InlineApprovalCard(
                 text = action.title,
                 style = MaterialTheme.typography.titleSmall.copy(
                     fontWeight = FontWeight.Bold,
-                    color = Slate100,
+                    color = theme.textPrimary,
                     fontSize = 14.sp
                 )
             )
@@ -114,18 +116,55 @@ fun InlineApprovalCard(
             Text(
                 text = "Target: ${action.targetSummary}",
                 style = MaterialTheme.typography.labelSmall.copy(
-                    color = Slate400,
+                    color = theme.textSecondary,
                     fontSize = 11.sp
                 )
             )
+
+            // Budget Tag
+            if (!action.budgetTag.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Surface(
+                    color = theme.accentPrimary.copy(alpha = 0.12f),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = "🏷️ ${action.budgetTag}",
+                        color = theme.accentPrimary,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                    )
+                }
+            }
+
+            // Diff preview box if available
+            if (!action.diffPreview.isNullOrBlank() && !isEditing) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Surface(
+                    color = theme.cardElevated,
+                    shape = RoundedCornerShape(10.dp),
+                    border = androidx.compose.foundation.BorderStroke(0.6.dp, theme.cardBorder),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = action.diffPreview,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 10.sp,
+                        color = ReactorPrimary,
+                        lineHeight = 14.sp,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(10.dp))
 
             // Fields Table / Preview
             Surface(
-                color = Slate900,
-                shape = RoundedCornerShape(10.dp),
-                border = androidx.compose.foundation.BorderStroke(0.8.dp, Slate700),
+                color = theme.cardElevated,
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(0.8.dp, theme.cardBorder),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(10.dp)) {
@@ -134,7 +173,10 @@ fun InlineApprovalCard(
                             Column(modifier = Modifier.padding(vertical = 4.dp)) {
                                 Text(
                                     text = key,
-                                    style = MaterialTheme.typography.labelSmall.copy(color = Cyan400, fontWeight = FontWeight.Bold)
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = theme.accentPrimary,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 )
                                 OutlinedTextField(
                                     value = value,
@@ -143,7 +185,7 @@ fun InlineApprovalCard(
                                     },
                                     singleLine = key != "Body",
                                     maxLines = if (key == "Body") 6 else 1,
-                                    textStyle = MaterialTheme.typography.bodySmall.copy(color = Slate100),
+                                    textStyle = MaterialTheme.typography.bodySmall.copy(color = theme.textPrimary),
                                     modifier = Modifier.fillMaxWidth()
                                 )
                             }
@@ -159,7 +201,7 @@ fun InlineApprovalCard(
                                 Text(
                                     text = key,
                                     style = MaterialTheme.typography.labelSmall.copy(
-                                        color = Slate400,
+                                        color = theme.textSecondary,
                                         fontWeight = FontWeight.SemiBold
                                     ),
                                     modifier = Modifier.weight(0.35f)
@@ -167,8 +209,8 @@ fun InlineApprovalCard(
                                 Text(
                                     text = value,
                                     style = MaterialTheme.typography.bodySmall.copy(
-                                        color = Slate100,
-                                        fontSize = 12.sp
+                                        color = theme.textPrimary,
+                                        fontSize = 11.sp
                                     ),
                                     maxLines = if (key == "Body") 3 else 1,
                                     modifier = Modifier.weight(0.65f)
@@ -181,7 +223,7 @@ fun InlineApprovalCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Action Buttons or Executed status
+            // Action Buttons
             if (action.status == ApprovalStatus.PENDING) {
                 if (isEditing) {
                     Row(
@@ -193,18 +235,18 @@ fun InlineApprovalCard(
                                 isEditing = false
                                 onEditAndApprove(action.id, editedFields)
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = Emerald500),
-                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = ReactorPrimary),
+                            shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Save & Execute", color = Slate950, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            Text("Save & Send ✨", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                         }
                         OutlinedButton(
                             onClick = { isEditing = false },
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Cancel", color = Slate300, fontSize = 12.sp)
+                            Text("Cancel", color = theme.textSecondary, fontSize = 12.sp)
                         }
                     }
                 } else {
@@ -214,45 +256,44 @@ fun InlineApprovalCard(
                     ) {
                         Button(
                             onClick = { onApprove(action.id) },
-                            colors = ButtonDefaults.buttonColors(containerColor = Emerald500),
-                            shape = RoundedCornerShape(10.dp),
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = ReactorPrimary),
+                            shape = RoundedCornerShape(12.dp),
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
                             modifier = Modifier
-                                .weight(1.3f)
+                                .weight(1.4f)
                                 .testTag("approve_btn_${action.id}")
                         ) {
-                            Icon(Icons.Default.Check, contentDescription = null, tint = Slate950, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Approve & Execute", color = Slate950, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            Text("Approve & Send ✨", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                         }
 
                         OutlinedButton(
                             onClick = { isEditing = true },
-                            shape = RoundedCornerShape(10.dp),
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
-                            modifier = Modifier.weight(0.9f)
+                            shape = RoundedCornerShape(12.dp),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+                            modifier = Modifier.weight(0.8f)
                         ) {
-                            Icon(Icons.Default.Edit, contentDescription = null, tint = Cyan400, modifier = Modifier.size(14.dp))
+                            Icon(Icons.Default.Edit, contentDescription = null, tint = theme.accentPrimary, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Edit", color = Cyan400, fontSize = 12.sp)
+                            Text("Edit ✏️", color = theme.accentPrimary, fontSize = 11.sp)
                         }
 
                         IconButton(
                             onClick = { onReject(action.id) },
                             modifier = Modifier
-                                .size(36.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Slate800)
+                                .size(38.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(theme.cardElevated)
                         ) {
-                            Icon(Icons.Default.Close, contentDescription = "Reject", tint = Rose500, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.Close, contentDescription = "Skip", tint = Rose500, modifier = Modifier.size(18.dp))
                         }
                     }
                 }
             } else {
-                // Completed status row
                 Surface(
-                    color = Slate900,
-                    shape = RoundedCornerShape(8.dp),
+                    color = theme.cardElevated,
+                    shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
@@ -263,13 +304,13 @@ fun InlineApprovalCard(
                             modifier = Modifier
                                 .size(8.dp)
                                 .clip(CircleShape)
-                                .background(if (action.status == ApprovalStatus.REJECTED) Rose500 else Emerald400)
+                                .background(if (action.status == ApprovalStatus.REJECTED) Rose500 else ReactorPrimary)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "${action.executedAt ?: action.status.label} · ${action.executionResult ?: ""}",
                             style = MaterialTheme.typography.labelSmall.copy(
-                                color = if (action.status == ApprovalStatus.REJECTED) Rose500 else Emerald400,
+                                color = if (action.status == ApprovalStatus.REJECTED) Rose500 else ReactorPrimary,
                                 fontSize = 11.sp
                             )
                         )

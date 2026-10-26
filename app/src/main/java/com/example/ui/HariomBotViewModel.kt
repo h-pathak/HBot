@@ -9,18 +9,30 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-enum class NavTab(val title: String, val icon: String) {
-    CHAT("Command", "chat"),
-    APPROVALS("Approvals", "shield"),
-    ACTIVITY("Routines", "pulse"),
-    MEMORY("Vault", "brain"),
-    WORKSPACE("Workspace", "cloud")
+enum class NavTab(val title: String, val iconEmoji: String) {
+    CHAT("Home", "🏠"),
+    APPROVALS("High-Fives", "✨"),
+    ACTIVITY("Activity", "🌱"),
+    MEMORY("Vault", "🧠"),
+    WORKSPACE("Sync", "🔗")
 }
 
 class HariomBotViewModel(
     private val repository: HariomBotRepository = HariomBotRepository(),
     private val geminiService: GeminiService = GeminiService()
 ) : ViewModel() {
+
+    // Theme Mode: Cozy Daylight (false) vs Bioluminescent Night (true) - Default to Cozy Daylight per prompt!
+    private val _isNightMode = MutableStateFlow(false)
+    val isNightMode: StateFlow<Boolean> = _isNightMode.asStateFlow()
+
+    // Layout Mode: Mobile Phone Shell (false) vs Studio Split View (true)
+    private val _isStudioMode = MutableStateFlow(false)
+    val isStudioMode: StateFlow<Boolean> = _isStudioMode.asStateFlow()
+
+    // Confetti Celebration Trigger
+    private val _confettiTrigger = MutableStateFlow(0L)
+    val confettiTrigger: StateFlow<Long> = _confettiTrigger.asStateFlow()
 
     // Selected Navigation Tab
     private val _selectedTab = MutableStateFlow(NavTab.CHAT)
@@ -65,38 +77,38 @@ class HariomBotViewModel(
     val interviewQuestions = listOf(
         InterviewQuestion(
             step = 0,
-            question = "What is the primary procurement bottleneck currently slowing down NocVita's oscillatory flow photobioreactor prototype?",
-            domain = "NocVita & Biorefinery",
-            rationale = "Helps @Reactor prioritize glassblowing vs. 3D-printing vendor outreach.",
+            question = "Which hardware milestone for the NocVi photobioreactor is highest priority under the ₹60,000 Month-1 SSIP 2.0 allocation?",
+            domain = "NocVita & SSIP 2.0",
+            rationale = "Helps @Reactor prioritize Vexma 3D SLA inserts vs. borosilicate column procurement.",
             options = listOf(
-                "Borosilicate glass column tolerances (OD 60mm)",
-                "SS316 tri-clamp endcap machining lead time",
-                "Biocompatible 3D-printed fluidic baffle autoclaving",
-                "Peristaltic pump flow rate calibration"
+                "Borosilicate 3.3 glass column (OD 60mm x 600mm)",
+                "3D-printed SLA helical fluidic baffles (Vexma)",
+                "CNC machined SS316 multi-port sanitary endcaps",
+                "Peristaltic pump & flow sensor calibration"
             )
         ),
         InterviewQuestion(
             step = 1,
-            question = "Which analytical instrument at MSU Baroda / I-STEM is highest priority for this week's sampling?",
+            question = "Which analytical instrument at MSU Baroda / I-STEM is highest priority for this week's riverine AMR sampling?",
             domain = "Research & Labs",
-            rationale = "Helps @Helix lock in I-STEM / GBRC slot booking proforma invoices.",
+            rationale = "Helps @Helix prepare the I-STEM / GBRC portal takeover checklist & proforma invoice.",
             options = listOf(
-                "ICP-MS (Heavy metal remediation quantification)",
-                "MALDI-TOF (Microbial isolate identification)",
-                "UV-Vis Spectrophotometer (Optical density & growth curve)",
-                "Sanger Sequencing (eDNA verification)"
+                "ICP-MS (Heavy metal ions in Mahi & Vishwamitri rivers)",
+                "MALDI-TOF (Identify 14 isolates with mean MAR = 0.29)",
+                "Sanger / NGS Sequencing (Sedimentary eDNA for INQUA 2027)",
+                "UV-Vis Spectrophotometer (Growth kinetics & OD680)"
             )
         ),
         InterviewQuestion(
             step = 2,
-            question = "What is our primary goal for this Saturday's LinkedIn thought-leadership post?",
+            question = "What angle should this Saturday's LinkedIn thought-leadership carousel focus on?",
             domain = "Content Engine",
-            rationale = "Guides @Pulse on whether to write a technical carousel or biotech founder narrative.",
+            rationale = "Guides @Pulse on whether to write a technical fluidics breakdown or founder journey.",
             options = listOf(
-                "Technical carousel breakdown of oscillatory flow mixing",
-                "Blue Biorefinery circular economy case study",
-                "MSU Baroda stochastic microbial synchronization research teaser",
-                "Vendor sourcing lessons for student biotech founders in Gujarat"
+                "Bioluminescent microalgae for decentralized urban wastewater",
+                "Oscillatory flow mixing kinetics vs bubble columns",
+                "How we won the ₹2,48,000 SSIP 2.0 grant at MSU Baroda",
+                "Blue Biorefinery: Circular valorization of spent coffee grounds"
             )
         )
     )
@@ -105,7 +117,7 @@ class HariomBotViewModel(
     private val _heartbeatStatus = MutableStateFlow<String?>(null)
     val heartbeatStatus: StateFlow<String?> = _heartbeatStatus.asStateFlow()
 
-    // User notification banner
+    // Notification banner
     private val _snackMessage = MutableStateFlow<String?>(null)
     val snackMessage: StateFlow<String?> = _snackMessage.asStateFlow()
 
@@ -119,9 +131,18 @@ class HariomBotViewModel(
     val skills = repository.skills
     val workspaceConnections = repository.workspaceConnections
 
-    // Daily Schedule & Content Sheet IDs
     val dailyScheduleId: String get() = repository.dailyScheduleSheetId
     val contentScheduleId: String get() = repository.contentScheduleSheetId
+
+    fun toggleTheme() {
+        _isNightMode.value = !_isNightMode.value
+        showSnack(if (_isNightMode.value) "🌙 Bioluminescent Night theme" else "☀️ Cozy Matcha & Oatmilk theme")
+    }
+
+    fun toggleStudioMode() {
+        _isStudioMode.value = !_isStudioMode.value
+        showSnack(if (_isStudioMode.value) "🖥️ Studio Split View enabled" else "📱 Mobile Phone Mode enabled")
+    }
 
     fun selectTab(tab: NavTab) {
         _selectedTab.value = tab
@@ -147,11 +168,9 @@ class HariomBotViewModel(
         _isGenerating.value = true
 
         viewModelScope.launch {
-            // Update bot status to thinking
             repository.updateBotStatus(targetBotId, BotStatus.THINKING, "Analyzing workspace query...", "gemini_2.5_flash")
 
-            // Small natural pacing delay
-            delay(400)
+            delay(350)
 
             val history = repository.messages.value[channel] ?: emptyList()
             val result = geminiService.generateAgentReply(
@@ -162,8 +181,7 @@ class HariomBotViewModel(
                 contentScheduleId = repository.contentScheduleSheetId
             )
 
-            // Update bot status to working/done
-            repository.updateBotStatus(targetBotId, BotStatus.WORKING, "Generated response & workspace sync", null)
+            repository.updateBotStatus(targetBotId, BotStatus.WORKING, "Generated response & synced", null)
 
             repository.addBotResponse(
                 channelId = channel,
@@ -172,7 +190,11 @@ class HariomBotViewModel(
                 approvalAction = result.approvalAction,
                 handoff = result.handoff,
                 scorecard = result.scorecard,
-                citationChips = result.citationChips
+                bentoBriefing = result.bentoBriefing,
+                portalTakeover = result.portalTakeover,
+                skillLearned = result.skillLearned,
+                citationChips = result.citationChips,
+                stepsUsed = result.stepsUsed
             )
 
             _isGenerating.value = false
@@ -184,7 +206,7 @@ class HariomBotViewModel(
     // Voice Call Controls
     fun startVoiceCall() {
         _isVoiceCallActive.value = true
-        _voiceTranscript.value = "Listening... Speak naturally to Atlas & teammates."
+        _voiceTranscript.value = "Listening... Speak naturally with Atlas & your companions."
         _isVoiceSpeaking.value = false
     }
 
@@ -218,7 +240,9 @@ class HariomBotViewModel(
                 botId = targetBot,
                 text = reply.replyText,
                 approvalAction = reply.approvalAction,
-                citationChips = reply.citationChips
+                bentoBriefing = reply.bentoBriefing,
+                citationChips = reply.citationChips,
+                stepsUsed = reply.stepsUsed
             )
 
             _isVoiceSpeaking.value = true
@@ -226,23 +250,25 @@ class HariomBotViewModel(
         }
     }
 
-    // Approval Gate Actions
+    // Approval Gate Actions (with Confetti!)
     fun approveAction(actionId: String) {
         repository.approveAction(actionId)
-        showSnack("✅ Action approved and executed via Google Workspace API")
+        _confettiTrigger.value = System.currentTimeMillis()
+        showSnack("✨ High-Five! Action approved & executed with confetti celebration!")
     }
 
     fun rejectAction(actionId: String) {
         repository.rejectAction(actionId)
-        showSnack("Action discarded from queue")
+        showSnack("Action skipped from review queue")
     }
 
     fun editAndApproveAction(actionId: String, updatedFields: Map<String, String>) {
         repository.editAndApproveAction(actionId, updatedFields)
-        showSnack("✅ Action edited & executed with updated parameters")
+        _confettiTrigger.value = System.currentTimeMillis()
+        showSnack("✏️ Action edited & executed successfully!")
     }
 
-    // Routine Actions
+    // Routines & Heartbeat Actions
     fun toggleRoutine(routineId: String) {
         repository.toggleRoutine(routineId)
     }
@@ -253,13 +279,12 @@ class HariomBotViewModel(
             delay(700)
             val summary = repository.runHeartbeatNow()
             _heartbeatStatus.value = summary
-            showSnack("Proactive Heartbeat completed! Check Command Center.")
+            showSnack("🌿 Proactive workspace sweep complete! Check Command Center.")
             delay(3000)
             _heartbeatStatus.value = null
         }
     }
 
-    // Activity Controls
     fun toggleTaskPause(taskId: String) {
         repository.toggleTaskPause(taskId)
     }
@@ -275,7 +300,7 @@ class HariomBotViewModel(
 
     fun addMemory(fact: String, category: MemoryCategory, tags: List<String>) {
         repository.addMemory(fact, category, tags)
-        showSnack("New memory learned & indexed in vault")
+        showSnack("✨ New memory learned & indexed in vault")
     }
 
     // Interview Mode
@@ -287,9 +312,8 @@ class HariomBotViewModel(
     fun answerInterview(answer: String) {
         val currentQ = interviewQuestions.getOrNull(_interviewStep.value)
         if (currentQ != null) {
-            // Save learned memory
             val tag = when (currentQ.domain) {
-                "NocVita & Biorefinery" -> MemoryCategory.NOCVITA
+                "NocVita & SSIP 2.0" -> MemoryCategory.NOCVITA
                 "Research & Labs" -> MemoryCategory.RESEARCH_LABS
                 else -> MemoryCategory.CONTENT
             }
@@ -312,10 +336,9 @@ class HariomBotViewModel(
         _isInterviewActive.value = false
     }
 
-    // Save Skill
     fun saveSkill(title: String, slug: String, summary: String, trigger: String, tools: List<String>, instructions: String) {
         repository.addSkill(title, slug, summary, trigger, tools, instructions)
-        showSnack("Workflow skill '$title' registered in Skills Vault")
+        showSnack("✨ Workflow skill '$title' registered in Skills Vault")
     }
 
     fun updateSheetIds(dailyId: String, contentId: String) {

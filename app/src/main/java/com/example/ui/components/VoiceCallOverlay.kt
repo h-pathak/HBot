@@ -11,9 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -21,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -38,6 +35,8 @@ fun VoiceCallOverlay(
     onClose: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val theme = LocalCozyTheme.current
+
     val infiniteTransition = rememberInfiniteTransition(label = "voice_wave")
     val pulse1 by infiniteTransition.animateFloat(
         initialValue = 0.85f,
@@ -61,16 +60,16 @@ fun VoiceCallOverlay(
 
     val quickVoicePrompts = listOf(
         "Atlas, run 8:30 AM workspace briefing",
-        "Reactor, compare Borosilicate column quotes",
+        "Reactor, check SSIP 2.0 Vexma quotes",
         "Helix, check I-STEM ICP-MS booking slots",
-        "Pulse, outline Friday bioprocess blog draft",
-        "Forge, check oscillatory flow Reynolds number"
+        "Pulse, outline Friday microalgae blog draft",
+        "Forge, calculate oscillatory flow Reynolds number"
     )
 
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Slate950.copy(alpha = 0.94f))
+            .background((if (theme.isNight) VelvetMidnightBg else OatmilkBg).copy(alpha = 0.96f))
             .padding(24.dp)
             .testTag("voice_call_overlay"),
         contentAlignment = Alignment.Center
@@ -88,13 +87,13 @@ fun VoiceCallOverlay(
                     modifier = Modifier
                         .size(8.dp)
                         .clip(CircleShape)
-                        .background(Emerald400)
+                        .background(ReactorPrimary)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Live Agent Call · Asia/Kolkata",
                     style = MaterialTheme.typography.labelMedium.copy(
-                        color = Emerald400,
+                        color = ReactorPrimary,
                         fontWeight = FontWeight.Bold
                     )
                 )
@@ -104,18 +103,19 @@ fun VoiceCallOverlay(
                 onClick = onClose,
                 modifier = Modifier
                     .clip(CircleShape)
-                    .background(Slate800)
+                    .background(theme.cardSurface)
+                    .border(0.8.dp, theme.cardBorder, CircleShape)
                     .testTag("close_voice_button")
             ) {
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = "Close Call",
-                    tint = Slate300
+                    tint = theme.textSecondary
                 )
             }
         }
 
-        // Center: Animated Glowing Orb
+        // Center: Living Animated Companions Orb
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
@@ -131,7 +131,7 @@ fun VoiceCallOverlay(
                         .size(160.dp)
                         .scale(pulse2)
                         .clip(CircleShape)
-                        .background(Cyan500.copy(alpha = 0.12f))
+                        .background(theme.accentPrimary.copy(alpha = 0.12f))
                 )
 
                 // Outer wave 1
@@ -140,56 +140,43 @@ fun VoiceCallOverlay(
                         .size(120.dp)
                         .scale(pulse1)
                         .clip(CircleShape)
-                        .background(Emerald400.copy(alpha = 0.22f))
+                        .background(ReactorPrimary.copy(alpha = 0.20f))
                 )
 
-                // Core Agent Sphere
-                Box(
-                    modifier = Modifier
-                        .size(84.dp)
-                        .clip(CircleShape)
-                        .background(
-                            Brush.radialGradient(
-                                listOf(Cyan400, Indigo500, Slate900)
-                            )
-                        )
-                        .border(2.dp, Cyan400, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = if (isSpeaking) Icons.Default.VolumeUp else Icons.Default.Mic,
-                        contentDescription = "Microphone",
-                        tint = Slate950,
-                        modifier = Modifier.size(38.dp)
-                    )
-                }
+                // Mascot Living Character in Voice Orb
+                BotMascot(
+                    botId = "atlas",
+                    state = if (isSpeaking) MascotState.WORKING else MascotState.LISTENING,
+                    size = 80.dp
+                )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
             Text(
-                text = if (isSpeaking) "HariomBot Speaking..." else "Listening to Hariom...",
+                text = if (isSpeaking) "HBot Speaking..." else "Listening to Hariom...",
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
-                    color = Slate100
+                    color = theme.textPrimary
                 )
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // Transcript bubble
             Surface(
-                color = Slate800,
-                shape = RoundedCornerShape(16.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Slate700),
+                color = theme.cardSurface,
+                shape = RoundedCornerShape(18.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, theme.cardBorder),
+                shadowElevation = 2.dp,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp)
             ) {
                 Text(
-                    text = if (transcript.isNotBlank()) transcript else "Ask anything regarding NocVita, MSU Baroda labs, or your content calendar...",
+                    text = if (transcript.isNotBlank()) transcript else "Ask anything regarding NocVita, SSIP 2.0 grants, MSU Baroda labs, or content...",
                     style = MaterialTheme.typography.bodyMedium.copy(
-                        color = if (transcript.isNotBlank()) Slate100 else Slate400,
+                        color = if (transcript.isNotBlank()) theme.textPrimary else theme.textSecondary,
                         textAlign = TextAlign.Center
                     ),
                     modifier = Modifier.padding(16.dp)
@@ -206,7 +193,7 @@ fun VoiceCallOverlay(
         ) {
             Text(
                 text = "Tap to speak directly:",
-                style = MaterialTheme.typography.labelSmall.copy(color = Slate400),
+                style = MaterialTheme.typography.labelSmall.copy(color = theme.textSecondary),
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
@@ -216,14 +203,17 @@ fun VoiceCallOverlay(
             ) {
                 items(quickVoicePrompts) { prompt ->
                     Surface(
-                        color = Slate800,
+                        color = theme.cardSurface,
                         shape = RoundedCornerShape(18.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Slate700),
+                        border = androidx.compose.foundation.BorderStroke(0.8.dp, theme.cardBorder),
                         modifier = Modifier.clickable { onVoiceInput(prompt) }
                     ) {
                         Text(
                             text = prompt,
-                            style = MaterialTheme.typography.labelSmall.copy(color = Cyan400),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                color = theme.textPrimary,
+                                fontWeight = FontWeight.SemiBold
+                            ),
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                         )
                     }
@@ -237,7 +227,7 @@ fun VoiceCallOverlay(
                 onClick = onClose,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Rose500,
-                    contentColor = Slate950
+                    contentColor = Color.White
                 ),
                 shape = RoundedCornerShape(24.dp),
                 modifier = Modifier
@@ -245,9 +235,9 @@ fun VoiceCallOverlay(
                     .height(48.dp)
                     .testTag("end_voice_call_button")
             ) {
-                Icon(Icons.Default.Phone, contentDescription = null, modifier = Modifier.size(18.dp))
+                Icon(Icons.Default.Phone, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("End Voice Call", fontWeight = FontWeight.Bold)
+                Text("End Voice Call", fontWeight = FontWeight.Bold, color = Color.White)
             }
         }
     }

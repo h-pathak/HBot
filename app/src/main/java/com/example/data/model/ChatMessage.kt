@@ -8,7 +8,8 @@ data class BotHandoff(
     val fromBotId: String,
     val toBotId: String,
     val taskTitle: String,
-    val contextSummary: String
+    val contextSummary: String,
+    val reasoning: String = "Automated domain delegation"
 )
 
 data class VendorScorecardRow(
@@ -25,6 +26,7 @@ data class VendorScorecardRow(
 data class VendorScorecard(
     val title: String,
     val component: String,
+    val budgetAllocation: String = "₹60,000 SSIP 2.0 Month-1",
     val rows: List<VendorScorecardRow>
 )
 
@@ -44,6 +46,10 @@ data class ChatMessage(
     val approvalAction: ApprovalAction? = null,
     val handoff: BotHandoff? = null,
     val scorecard: VendorScorecard? = null,
+    val bentoBriefing: BentoBriefing? = null,
+    val portalTakeover: PortalTakeoverCard? = null,
+    val skillLearned: SkillLearnedCard? = null,
     val citationChips: List<CitationChip> = emptyList(),
+    val stepsUsed: List<String> = emptyList(),
     val isThinking: Boolean = false
 )

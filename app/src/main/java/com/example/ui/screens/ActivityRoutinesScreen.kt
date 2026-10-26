@@ -1,7 +1,6 @@
 package com.example.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,7 +10,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,6 +23,8 @@ import androidx.compose.ui.unit.sp
 import com.example.data.model.ActivityStatus
 import com.example.data.model.ActivityTask
 import com.example.data.model.Routine
+import com.example.ui.components.BotMascot
+import com.example.ui.components.MascotState
 import com.example.ui.theme.*
 
 @Composable
@@ -37,14 +37,16 @@ fun ActivityRoutinesScreen(
     onToggleTaskPause: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val theme = LocalCozyTheme.current
+
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Slate900)
+            .background(theme.canvasBg)
             .padding(horizontal = 16.dp, vertical = 10.dp)
             .testTag("activity_routines_screen")
     ) {
-        // Header Row & Proactive Heartbeat Button
+        // Header Row & Proactive Workspace Sweep Button
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -52,37 +54,30 @@ fun ActivityRoutinesScreen(
         ) {
             Column {
                 Text(
-                    text = "Always-On Engine",
+                    text = "Always-On Engine 🌱",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = Slate100,
+                        color = theme.textPrimary,
                         fontSize = 18.sp
                     )
                 )
                 Text(
-                    text = "Dots Activity View & Standing Routines",
-                    style = MaterialTheme.typography.labelSmall.copy(color = Cyan400)
+                    text = "ChatGPT Dots Activity View & Scheduler",
+                    style = MaterialTheme.typography.labelSmall.copy(color = theme.accentPrimary)
                 )
             }
 
-            // "Run Proactive Heartbeat Now" Button
+            // Prominent "Run Proactive Workspace Sweep 🌿" Button
             Button(
                 onClick = onRunHeartbeat,
-                colors = ButtonDefaults.buttonColors(containerColor = Cyan400),
-                shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = ReactorPrimary),
+                shape = RoundedCornerShape(14.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
                 modifier = Modifier.testTag("run_heartbeat_button")
             ) {
-                Icon(
-                    imageVector = Icons.Default.Bolt,
-                    contentDescription = null,
-                    tint = Slate950,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = "Run Heartbeat",
-                    color = Slate950,
+                    text = "Workspace Sweep 🌿",
+                    color = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 12.sp
                 )
@@ -93,9 +88,9 @@ fun ActivityRoutinesScreen(
         if (heartbeatStatus != null) {
             Spacer(modifier = Modifier.height(10.dp))
             Surface(
-                color = Slate850,
-                shape = RoundedCornerShape(10.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Cyan400),
+                color = theme.cardSurface,
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, ReactorPrimary),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
@@ -104,14 +99,14 @@ fun ActivityRoutinesScreen(
                 ) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(16.dp),
-                        color = Cyan400,
+                        color = ReactorPrimary,
                         strokeWidth = 2.dp
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
                         text = heartbeatStatus,
                         style = MaterialTheme.typography.bodySmall.copy(
-                            color = Slate100,
+                            color = theme.textPrimary,
                             fontSize = 11.sp
                         )
                     )
@@ -133,7 +128,7 @@ fun ActivityRoutinesScreen(
                 Text(
                     text = "ONGOING RESPONSIBILITIES (ACTIVITY VIEW)",
                     style = MaterialTheme.typography.labelSmall.copy(
-                        color = Slate400,
+                        color = theme.textSecondary,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp
                     )
@@ -141,7 +136,7 @@ fun ActivityRoutinesScreen(
             }
 
             items(activities, key = { it.id }) { task ->
-                ActivityTaskCard(
+                CozyActivityTaskCard(
                     task = task,
                     onTogglePause = { onToggleTaskPause(task.id) }
                 )
@@ -153,7 +148,7 @@ fun ActivityRoutinesScreen(
                 Text(
                     text = "STANDING ROUTINES (CRON SCHEDULER)",
                     style = MaterialTheme.typography.labelSmall.copy(
-                        color = Slate400,
+                        color = theme.textSecondary,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp
                     )
@@ -161,7 +156,7 @@ fun ActivityRoutinesScreen(
             }
 
             items(routines, key = { it.id }) { routine ->
-                RoutineCard(
+                CozyRoutineCard(
                     routine = routine,
                     onToggle = { onToggleRoutine(routine.id) }
                 )
@@ -171,14 +166,17 @@ fun ActivityRoutinesScreen(
 }
 
 @Composable
-fun ActivityTaskCard(
+fun CozyActivityTaskCard(
     task: ActivityTask,
     onTogglePause: () -> Unit
 ) {
+    val theme = LocalCozyTheme.current
+
     Surface(
-        color = Slate850,
-        shape = RoundedCornerShape(14.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Slate700),
+        color = theme.cardSurface,
+        shape = RoundedCornerShape(20.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, theme.cardBorder),
+        shadowElevation = 1.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
@@ -189,26 +187,24 @@ fun ActivityTaskCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(Cyan400.copy(alpha = 0.15f))
-                            .padding(horizontal = 8.dp, vertical = 2.dp)
-                    ) {
+                    BotMascot(
+                        botId = task.botId,
+                        state = if (task.status == ActivityStatus.RUNNING) MascotState.WORKING else MascotState.IDLE,
+                        size = 32.dp
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
                         Text(
                             text = "@${task.botId}",
-                            color = Cyan400,
+                            color = theme.accentPrimary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 11.sp
                         )
+                        Text(
+                            text = "Step ${task.stepIndex} of ${task.totalSteps}",
+                            style = MaterialTheme.typography.labelSmall.copy(color = theme.textSecondary, fontSize = 10.sp)
+                        )
                     }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Text(
-                        text = "Step ${task.stepIndex} of ${task.totalSteps}",
-                        style = MaterialTheme.typography.labelSmall.copy(color = Slate400, fontSize = 11.sp)
-                    )
                 }
 
                 // Pause / Resume control
@@ -217,24 +213,24 @@ fun ActivityTaskCard(
                     modifier = Modifier
                         .size(32.dp)
                         .clip(CircleShape)
-                        .background(Slate800)
+                        .background(theme.cardElevated)
                 ) {
                     Icon(
                         imageVector = if (task.status == ActivityStatus.RUNNING) Icons.Default.Pause else Icons.Default.PlayArrow,
                         contentDescription = "Toggle Pause",
-                        tint = if (task.status == ActivityStatus.RUNNING) Amber400 else Emerald400,
+                        tint = if (task.status == ActivityStatus.RUNNING) AtlasPrimary else ReactorPrimary,
                         modifier = Modifier.size(16.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = task.title,
                 style = MaterialTheme.typography.titleSmall.copy(
                     fontWeight = FontWeight.Bold,
-                    color = Slate100,
+                    color = theme.textPrimary,
                     fontSize = 14.sp
                 )
             )
@@ -242,7 +238,7 @@ fun ActivityTaskCard(
             Text(
                 text = task.currentStep,
                 style = MaterialTheme.typography.bodySmall.copy(
-                    color = Emerald400,
+                    color = ReactorPrimary,
                     fontSize = 12.sp
                 ),
                 modifier = Modifier.padding(top = 2.dp)
@@ -257,29 +253,29 @@ fun ActivityTaskCard(
                     .fillMaxWidth()
                     .height(6.dp)
                     .clip(RoundedCornerShape(3.dp)),
-                color = Cyan400,
-                trackColor = Slate800,
+                color = theme.accentPrimary,
+                trackColor = theme.cardElevated,
             )
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Step Logs accordion
+            // Step Logs box
             Surface(
-                color = Slate900,
-                shape = RoundedCornerShape(8.dp),
-                border = androidx.compose.foundation.BorderStroke(0.6.dp, Slate700),
+                color = theme.cardElevated,
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(0.6.dp, theme.cardBorder),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(8.dp)) {
                     Text(
-                        text = "Latest execution log:",
-                        style = MaterialTheme.typography.labelSmall.copy(color = Slate400, fontSize = 10.sp)
+                        text = "Latest steps taken:",
+                        style = MaterialTheme.typography.labelSmall.copy(color = theme.textSecondary, fontSize = 10.sp)
                     )
                     task.logs.takeLast(2).forEach { log ->
                         Text(
                             text = "• $log",
                             style = MaterialTheme.typography.bodySmall.copy(
-                                color = Slate300,
+                                color = theme.textPrimary,
                                 fontSize = 11.sp
                             ),
                             modifier = Modifier.padding(top = 2.dp)
@@ -292,14 +288,17 @@ fun ActivityTaskCard(
 }
 
 @Composable
-fun RoutineCard(
+fun CozyRoutineCard(
     routine: Routine,
     onToggle: () -> Unit
 ) {
+    val theme = LocalCozyTheme.current
+
     Surface(
-        color = Slate850,
-        shape = RoundedCornerShape(12.dp),
-        border = androidx.compose.foundation.BorderStroke(0.8.dp, Slate700),
+        color = theme.cardSurface,
+        shape = RoundedCornerShape(18.dp),
+        border = androidx.compose.foundation.BorderStroke(0.8.dp, theme.cardBorder),
+        shadowElevation = 1.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -311,29 +310,28 @@ fun RoutineCard(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "@${routine.botId}",
-                        color = Cyan400,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 11.sp
+                    BotMascot(
+                        botId = routine.botId,
+                        state = MascotState.IDLE,
+                        size = 24.dp
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = routine.scheduleText,
+                        text = "@${routine.botId} · ${routine.scheduleText}",
                         style = MaterialTheme.typography.labelSmall.copy(
-                            color = Slate400,
+                            color = theme.textSecondary,
                             fontSize = 10.sp
                         )
                     )
                 }
 
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
                     text = routine.title,
                     style = MaterialTheme.typography.titleSmall.copy(
                         fontWeight = FontWeight.Bold,
-                        color = Slate100,
+                        color = theme.textPrimary,
                         fontSize = 13.sp
                     )
                 )
@@ -341,7 +339,7 @@ fun RoutineCard(
                 Text(
                     text = routine.description,
                     style = MaterialTheme.typography.bodySmall.copy(
-                        color = Slate300,
+                        color = theme.textSecondary,
                         fontSize = 11.sp
                     ),
                     maxLines = 2,
@@ -351,7 +349,7 @@ fun RoutineCard(
                 Text(
                     text = "Last executed: ${routine.lastRunText}",
                     style = MaterialTheme.typography.labelSmall.copy(
-                        color = Emerald400,
+                        color = ReactorPrimary,
                         fontSize = 10.sp
                     ),
                     modifier = Modifier.padding(top = 4.dp)
@@ -364,10 +362,10 @@ fun RoutineCard(
                 checked = routine.isEnabled,
                 onCheckedChange = { onToggle() },
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = Slate950,
-                    checkedTrackColor = Cyan400,
-                    uncheckedThumbColor = Slate400,
-                    uncheckedTrackColor = Slate800
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = ReactorPrimary,
+                    uncheckedThumbColor = theme.textSecondary,
+                    uncheckedTrackColor = theme.cardElevated
                 )
             )
         }
