@@ -234,7 +234,7 @@ fun MemorySkillsScreen(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = onSearchChanged,
-                placeholder = { Text("Search SSIP grant, riverine AMR, CAD specs...", color = theme.textSecondary, fontSize = 12.sp) },
+                placeholder = { Text("Search memories, projects, specifications...", color = theme.textSecondary, fontSize = 12.sp) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = theme.textSecondary) },
                 singleLine = true,
                 textStyle = MaterialTheme.typography.bodySmall.copy(color = theme.textPrimary),
@@ -307,8 +307,8 @@ fun MemorySkillsScreen(
     // Add Memory Dialog
     if (showAddDialog) {
         var newFact by remember { mutableStateOf("") }
-        var newCat by remember { mutableStateOf(MemoryCategory.NOCVITA) }
-        var newTags by remember { mutableStateOf("SSIP 2.0, NocVi, Research") }
+        var newCat by remember { mutableStateOf(MemoryCategory.HARDWARE_RND) }
+        var newTags by remember { mutableStateOf("Hardware, Prototype, Specs") }
 
         AlertDialog(
             onDismissRequest = { showAddDialog = false },

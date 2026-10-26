@@ -24,14 +24,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.data.model.ApprovalStatus
 import com.example.ui.components.ConfettiView
+import com.example.ui.components.PrivateVaultDialog
 import com.example.ui.components.TopRosterBar
 import com.example.ui.components.VoiceCallOverlay
 import com.example.ui.screens.*
 import com.example.ui.theme.*
 
 @Composable
-fun HariomBotApp(
-    viewModel: HariomBotViewModel = viewModel()
+fun HBotApp(
+    viewModel: HBotViewModel = viewModel()
 ) {
     val isNightMode by viewModel.isNightMode.collectAsStateWithLifecycle()
     val isStudioMode by viewModel.isStudioMode.collectAsStateWithLifecycle()
@@ -44,6 +45,9 @@ fun HariomBotApp(
     val isVoiceCallActive by viewModel.isVoiceCallActive.collectAsStateWithLifecycle()
     val voiceTranscript by viewModel.voiceTranscript.collectAsStateWithLifecycle()
     val isVoiceSpeaking by viewModel.isVoiceSpeaking.collectAsStateWithLifecycle()
+
+    val vaultProfile by viewModel.vaultProfile.collectAsStateWithLifecycle()
+    val isPrivateVaultOpen by viewModel.isPrivateVaultOpen.collectAsStateWithLifecycle()
 
     val bots by viewModel.bots.collectAsStateWithLifecycle()
     val messages by viewModel.messages.collectAsStateWithLifecycle()
@@ -75,15 +79,16 @@ fun HariomBotApp(
     }
 
     // Predictive BackHandler
-    BackHandler(enabled = isVoiceCallActive || selectedTab != NavTab.CHAT || activeChannelId != "command-center") {
+    BackHandler(enabled = isPrivateVaultOpen || isVoiceCallActive || selectedTab != NavTab.CHAT || activeChannelId != "command-center") {
         when {
+            isPrivateVaultOpen -> viewModel.closePrivateVault()
             isVoiceCallActive -> viewModel.endVoiceCall()
             selectedTab != NavTab.CHAT -> viewModel.selectTab(NavTab.CHAT)
             activeChannelId != "command-center" -> viewModel.selectChannel("command-center")
         }
     }
 
-    HariomBotTheme(isNightMode = isNightMode) {
+    HBotTheme(isNightMode = isNightMode) {
         val theme = LocalCozyTheme.current
 
         Box(
@@ -104,7 +109,7 @@ fun HariomBotApp(
                     )
             )
 
-            // Centered device container: in Studio Mode it widens; in Phone Mode it's max-w-[440px]
+            // Centered device container: in Studio Mode it widens; in Phone Mode it's max-w-[450dp]
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -121,6 +126,7 @@ fun HariomBotApp(
                             selectedChannelId = activeChannelId,
                             isNightMode = isNightMode,
                             isStudioMode = isStudioMode,
+                            userSubtitle = vaultProfile.organizationOrLab.ifBlank { "Multi-Agent Workspace" },
                             onSelectChannel = { channelId ->
                                 viewModel.selectChannel(channelId)
                                 viewModel.selectTab(NavTab.CHAT)
@@ -128,6 +134,7 @@ fun HariomBotApp(
                             onToggleTheme = { viewModel.toggleTheme() },
                             onToggleStudioMode = { viewModel.toggleStudioMode() },
                             onOpenVoiceCall = { viewModel.startVoiceCall() },
+                            onOpenVault = { viewModel.openPrivateVault() },
                             modifier = Modifier.statusBarsPadding()
                         )
                     },
@@ -377,6 +384,18 @@ fun HariomBotApp(
 
                         // Confetti Celebration Layer
                         ConfettiView(trigger = confettiTrigger)
+
+                        // Private On-Device Vault Dialog
+                        if (isPrivateVaultOpen) {
+                            PrivateVaultDialog(
+                                currentProfile = vaultProfile,
+                                onDismiss = { viewModel.closePrivateVault() },
+                                onSaveProfile = { viewModel.saveVaultProfile(it) },
+                                onImportJson = { viewModel.importVaultJson(it) },
+                                onClearAll = { viewModel.clearVaultAll() },
+                                onShowMessage = { viewModel.showSnack(it) }
+                            )
+                        }
                     }
                 }
             }

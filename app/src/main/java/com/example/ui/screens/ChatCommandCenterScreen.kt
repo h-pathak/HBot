@@ -56,22 +56,22 @@ fun ChatCommandCenterScreen(
 
     val quickActionChips = listOf(
         Pair("⚡ Morning Brief", "/brief"),
-        Pair("🫧 Compare Vendor RFQs", "/rfq"),
-        Pair("🌱 SSIP 2.0 Grant Status", "/grant"),
-        Pair("🧬 Check Lab & GBRC Slots", "/lab-check"),
-        Pair("🔬 Boltz Modeling Prep", "/boltz"),
-        Pair("✍️ Run Thursday Content", "/content"),
-        Pair("🎙️ Interview Me", "/interview")
+        Pair("🫧 Compare Supplier RFQs", "/rfq"),
+        Pair("🌱 Project Grant Status", "/grant"),
+        Pair("🧬 Check Lab & Facility Slots", "/lab-check"),
+        Pair("🔬 Biomolecular Modeling", "/boltz"),
+        Pair("✍️ Weekly Content Cycle", "/content"),
+        Pair("🎙️ Context Interview", "/interview")
     )
 
     val slashCommands = listOf(
         Pair("/brief", "Run complete morning workspace & schedule briefing"),
-        Pair("/rfq", "Generate vendor RFQ email for PBR components under SSIP 2.0"),
-        Pair("/grant", "Check SSIP 2.0 grant status (Ref 532, ₹2,48,000) & prototyping budget"),
-        Pair("/boltz", "Prepare Boltz-1 & AlphaFold biomolecular docking setup"),
-        Pair("/content", "Trigger Thursday-to-Wednesday content pipeline sweep"),
-        Pair("/lab-check", "Check I-STEM & GBRC analytical slots availability"),
-        Pair("/learn", "Extract discussed workflow and save as new SKILL.md"),
+        Pair("/rfq", "Generate supplier RFQ email for prototype components"),
+        Pair("/grant", "Check project grant status, milestones & prototyping budget"),
+        Pair("/boltz", "Prepare biomolecular structure & docking setup"),
+        Pair("/content", "Trigger weekly content pipeline sweep"),
+        Pair("/lab-check", "Check external analytical facility slots availability"),
+        Pair("/learn", "Extract discussed workflow and save as new SKILL in Vault"),
         Pair("/interview", "Start 1-question-at-a-time Business Context Interview")
     )
 

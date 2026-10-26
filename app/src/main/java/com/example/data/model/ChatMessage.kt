@@ -26,7 +26,7 @@ data class VendorScorecardRow(
 data class VendorScorecard(
     val title: String,
     val component: String,
-    val budgetAllocation: String = "₹60,000 SSIP 2.0 Month-1",
+    val budgetAllocation: String = "Allocated Project Budget",
     val rows: List<VendorScorecardRow>
 )
 

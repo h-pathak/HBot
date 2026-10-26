@@ -116,8 +116,8 @@ private val M3LightColorScheme = lightColorScheme(
 )
 
 @Composable
-fun HariomBotTheme(
-    isNightMode: Boolean = true,
+fun HBotTheme(
+    isNightMode: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val cozyColors = if (isNightMode) BioluminescentNightColors else CozyDaylightColors

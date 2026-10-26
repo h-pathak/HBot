@@ -58,7 +58,7 @@
         android:fillColor="#38BDF8"
         android:pathData="M 54,21 A 3,3 0 1,1 54,20.99 Z" />
 
-    <!-- DNA Helix Nodes (Biotech motif for NocVita & Helix) -->
+    <!-- DNA Helix Nodes (Science motif for Helix) -->
     <path
         android:fillColor="#38BDF8"
         android:pathData="M 45,67 A 2.5,2.5 0 1,1 45,66.99 Z" />

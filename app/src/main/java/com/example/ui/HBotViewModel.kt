@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ai.GeminiService
 import com.example.data.model.*
-import com.example.data.repository.HariomBotRepository
+import com.example.data.repository.HBotRepository
+import com.example.data.vault.PrivateVaultManager
+import com.example.data.vault.PrivateVaultProfile
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -17,12 +19,21 @@ enum class NavTab(val title: String, val iconEmoji: String) {
     WORKSPACE("Sync", "🔗")
 }
 
-class HariomBotViewModel(
-    private val repository: HariomBotRepository = HariomBotRepository(),
-    private val geminiService: GeminiService = GeminiService()
+class HBotViewModel(
+    val repository: HBotRepository = HBotRepository(),
+    private val geminiService: GeminiService = GeminiService(),
+    val vaultManager: PrivateVaultManager? = null
 ) : ViewModel() {
 
-    // Theme Mode: Cozy Daylight (false) vs Bioluminescent Night (true) - Default to Cozy Daylight per prompt!
+    // Vault Profile state
+    val vaultProfile: StateFlow<PrivateVaultProfile> = vaultManager?.vaultProfile
+        ?: MutableStateFlow(PrivateVaultProfile()).asStateFlow()
+
+    // Private Vault Dialog State
+    private val _isPrivateVaultOpen = MutableStateFlow(false)
+    val isPrivateVaultOpen: StateFlow<Boolean> = _isPrivateVaultOpen.asStateFlow()
+
+    // Theme Mode: Cozy Daylight (false) vs Bioluminescent Night (true)
     private val _isNightMode = MutableStateFlow(false)
     val isNightMode: StateFlow<Boolean> = _isNightMode.asStateFlow()
 
@@ -77,38 +88,38 @@ class HariomBotViewModel(
     val interviewQuestions = listOf(
         InterviewQuestion(
             step = 0,
-            question = "Which hardware milestone for the NocVi photobioreactor is highest priority under the ₹60,000 Month-1 SSIP 2.0 allocation?",
-            domain = "NocVita & SSIP 2.0",
-            rationale = "Helps @Reactor prioritize Vexma 3D SLA inserts vs. borosilicate column procurement.",
+            question = "Which hardware milestone for the prototype assembly is highest priority for this cycle?",
+            domain = "Hardware & Prototyping",
+            rationale = "Helps @Reactor prioritize component fabrication vs. supplier procurement.",
             options = listOf(
-                "Borosilicate 3.3 glass column (OD 60mm x 600mm)",
-                "3D-printed SLA helical fluidic baffles (Vexma)",
-                "CNC machined SS316 multi-port sanitary endcaps",
+                "Custom borosilicate fluidic column assembly",
+                "3D-printed SLA helical fluidic baffles",
+                "CNC machined sanitary endcaps and fittings",
                 "Peristaltic pump & flow sensor calibration"
             )
         ),
         InterviewQuestion(
             step = 1,
-            question = "Which analytical instrument at MSU Baroda / I-STEM is highest priority for this week's riverine AMR sampling?",
+            question = "Which analytical instrument or laboratory testing session is highest priority this week?",
             domain = "Research & Labs",
-            rationale = "Helps @Helix prepare the I-STEM / GBRC portal takeover checklist & proforma invoice.",
+            rationale = "Helps @Helix prepare the instrument booking checklist and proforma review.",
             options = listOf(
-                "ICP-MS (Heavy metal ions in Mahi & Vishwamitri rivers)",
-                "MALDI-TOF (Identify 14 isolates with mean MAR = 0.29)",
-                "Sanger / NGS Sequencing (Sedimentary eDNA for INQUA 2027)",
-                "UV-Vis Spectrophotometer (Growth kinetics & OD680)"
+                "High-Resolution Spectrometry (Heavy metal trace analysis)",
+                "Isolate Identification & Culture Assay",
+                "High-Throughput Metagenomic Sequencing",
+                "Spectrophotometer Growth Kinetics & OD Monitoring"
             )
         ),
         InterviewQuestion(
             step = 2,
-            question = "What angle should this Saturday's LinkedIn thought-leadership carousel focus on?",
+            question = "What angle should this cycle's technical brief or article focus on?",
             domain = "Content Engine",
-            rationale = "Guides @Pulse on whether to write a technical fluidics breakdown or founder journey.",
+            rationale = "Guides @Pulse on whether to write a technical engineering breakdown or project overview.",
             options = listOf(
-                "Bioluminescent microalgae for decentralized urban wastewater",
+                "Bioprocess engineering for decentralized wastewater remediation",
                 "Oscillatory flow mixing kinetics vs bubble columns",
-                "How we won the ₹2,48,000 SSIP 2.0 grant at MSU Baroda",
-                "Blue Biorefinery: Circular valorization of spent coffee grounds"
+                "Grant navigation and milestone execution for hardware founders",
+                "Circular bio-economy: Valorization of agricultural and food residues"
             )
         )
     )
@@ -133,6 +144,47 @@ class HariomBotViewModel(
 
     val dailyScheduleId: String get() = repository.dailyScheduleSheetId
     val contentScheduleId: String get() = repository.contentScheduleSheetId
+
+    init {
+        // Observe vault updates and sync with repository
+        viewModelScope.launch {
+            vaultProfile.collect { profile ->
+                repository.syncVaultProfile(profile)
+            }
+        }
+    }
+
+    // Vault Dialog Controls
+    fun openPrivateVault() {
+        _isPrivateVaultOpen.value = true
+    }
+
+    fun closePrivateVault() {
+        _isPrivateVaultOpen.value = false
+    }
+
+    fun saveVaultProfile(profile: PrivateVaultProfile) {
+        vaultManager?.saveProfile(profile)
+        repository.syncVaultProfile(profile)
+    }
+
+    fun importVaultJson(jsonString: String) {
+        val res = vaultManager?.importFromJson(jsonString)
+        if (res != null && res.isSuccess) {
+            showSnack("✅ Private Vault profile imported successfully!")
+        } else {
+            showSnack("❌ Invalid JSON format for vault profile.")
+        }
+    }
+
+    fun exportVaultJson(): String {
+        return vaultManager?.exportToJson() ?: vaultProfile.value.toJsonString()
+    }
+
+    fun clearVaultAll() {
+        vaultManager?.clearAllData()
+        repository.syncVaultProfile(PrivateVaultProfile())
+    }
 
     fun toggleTheme() {
         _isNightMode.value = !_isNightMode.value
@@ -178,7 +230,8 @@ class HariomBotViewModel(
                 userPrompt = query,
                 conversationHistory = history,
                 dailyScheduleId = repository.dailyScheduleSheetId,
-                contentScheduleId = repository.contentScheduleSheetId
+                contentScheduleId = repository.contentScheduleSheetId,
+                vaultProfile = vaultProfile.value
             )
 
             repository.updateBotStatus(targetBotId, BotStatus.WORKING, "Generated response & synced", null)
@@ -232,7 +285,8 @@ class HariomBotViewModel(
                 userPrompt = spokenText,
                 conversationHistory = repository.messages.value[channel] ?: emptyList(),
                 dailyScheduleId = repository.dailyScheduleSheetId,
-                contentScheduleId = repository.contentScheduleSheetId
+                contentScheduleId = repository.contentScheduleSheetId,
+                vaultProfile = vaultProfile.value
             )
 
             repository.addBotResponse(
@@ -275,7 +329,7 @@ class HariomBotViewModel(
 
     fun runHeartbeatNow() {
         viewModelScope.launch {
-            _heartbeatStatus.value = "Running read-only sweep across Gmail, Calendar & Sheets..."
+            _heartbeatStatus.value = "Running read-only sweep across workspace..."
             delay(700)
             val summary = repository.runHeartbeatNow()
             _heartbeatStatus.value = summary
@@ -313,7 +367,7 @@ class HariomBotViewModel(
         val currentQ = interviewQuestions.getOrNull(_interviewStep.value)
         if (currentQ != null) {
             val tag = when (currentQ.domain) {
-                "NocVita & SSIP 2.0" -> MemoryCategory.NOCVITA
+                "Hardware & Prototyping" -> MemoryCategory.HARDWARE_RND
                 "Research & Labs" -> MemoryCategory.RESEARCH_LABS
                 else -> MemoryCategory.CONTENT
             }

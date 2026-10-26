@@ -277,7 +277,7 @@ const AtlasCharacter: React.FC<{ state: MascotState; palette: Palette }> = ({ st
 };
 
 // ==========================================
-// 2. REACTOR (NocVita Ops & Photobioreactor)
+// 2. REACTOR (Hardware Ops & Photobioreactor)
 // Bioluminescent mint-emerald Erlenmeyer flask with rising glowing bubbles
 // ==========================================
 const ReactorCharacter: React.FC<{ state: MascotState; palette: Palette }> = ({ state, palette }) => {

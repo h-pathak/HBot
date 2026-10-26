@@ -1,5 +1,5 @@
 /**
- * HBot v2 (HariomBot) Storage Service
+ * HBot v2 Storage Service
  * Manages persistent offline-first synchronization of app state (messages, memories, approvals)
  * utilizing a combination of Firebase Firestore and localStorage.
  */
@@ -396,33 +396,33 @@ class StorageService {
     if (existingMemories.length === 0) {
       const defaultMemories: MemoryItem[] = [
         {
-          id: 'mem_ssip_grant',
+          id: 'mem_rnd_grant',
           category: 'BIOTECH',
-          fact: 'Recipient of SSIP 2.0 Grant (Ref: 532, ₹2,48,000) for NocVi Bioluminescent Photobioreactor. Incubated at STBI Savli with Sandoz Agri-India validation.',
+          fact: 'Active Prototyping & R&D Innovation Project. Hardware and fabrication budgets tracked in expense ledger.',
           confidence: 0.99,
-          source: 'Government of Gujarat SSIP 2.0 Award Letter',
+          source: 'Project Proposal & Award Documentation',
           timestamp: 'Oct 24, 2026',
         },
         {
-          id: 'mem_blue_biorefinery',
+          id: 'mem_bioreactor_specs',
           category: 'BIOTECH',
-          fact: 'Blue Biorefinery project: Subcritical water extraction of Mannooligosaccharides (MOS) from spent coffee grounds for prebiotic bio-formulations.',
+          fact: 'Bioreactor project: Subcritical fluid extraction and continuous culture monitoring for optimized biomass yield.',
           confidence: 0.96,
           source: 'Lab Protocol Notebook #04',
           timestamp: 'Oct 24, 2026',
         },
         {
-          id: 'mem_riverine_amr',
+          id: 'mem_genomics_pipeline',
           category: 'ACADEMIC',
-          fact: 'MSU Baroda Microbiology thesis research on Riverine AMR with mean MAR Index = 0.29 across Mahi and Vishwamitri rivers; sedimentary eDNA targeting INQUA 2027.',
+          fact: 'Microbiology thesis research on environmental metagenomics and antimicrobial resistance markers.',
           confidence: 0.98,
-          source: 'Dept. of Microbiology, MSU Baroda',
+          source: 'Institutional Research Department',
           timestamp: 'Oct 23, 2026',
         },
         {
           id: 'mem_connected_sheets',
           category: 'WORKFLOW',
-          fact: 'Connected Google Sheets: Daily Schedule (1hqA9AyxxWv6B9HlPPfLumetfhSzduUZc22dPD0AzxYk) and Content Schedule (1XpHiWo6J_RVBsNN5ZgnWKUr9FDgX_cTNhIDYKZvHMEw).',
+          fact: 'Google Sheets synchronization ready. Configure Sheet IDs and custom credentials in the Private Vault.',
           confidence: 1.0,
           source: 'System Workspace Configuration',
           timestamp: 'Oct 25, 2026',
@@ -442,43 +442,43 @@ class StorageService {
           botId: 'reactor',
           service: 'GOOGLE_SHEETS',
           operationType: 'SHEET_ROW_UPDATE',
-          title: 'Confirm SLA 3D Printing Vendor (Vexma Technologies)',
-          previewText: 'Approve vendor selection for NocVi Photobioreactor impeller housing prototype (₹4,200, 3-day turnaround).',
+          title: 'Confirm SLA 3D Printing Vendor (Supplier A)',
+          previewText: 'Approve vendor selection for impeller housing prototype (₹4,200, 3-day turnaround).',
           diffPreview: {
-            before: 'Pending RFQ Quotes (Vexma ₹4,200 vs Soch3D ₹5,800)',
-            after: 'Selected: Vexma Technologies (PO #NV-SLA-001 allocated to SSIP Tranche 1)',
-            targetSheetOrDoc: 'SSIP 2.0 Expense Ledger (Tab: Prototypes)',
+            before: 'Pending RFQ Quotes (Supplier A ₹4,200 vs Supplier B ₹5,800)',
+            after: 'Selected: Supplier A (PO #PROTO-SLA-001 allocated to Prototyping Budget)',
+            targetSheetOrDoc: 'Expense Ledger (Tab: Prototypes)',
           },
           budgetTag: {
-            trancheName: 'SSIP 2.0 Tranche 1 (Consumables & Prototyping)',
+            trancheName: 'R&D Phase 1 (Consumables & Prototyping)',
             amount: 4200,
             currency: 'INR',
             remainingTranche: 82400,
           },
           status: 'PENDING',
           targetPayload: {
-            vendor: 'Vexma Technologies',
-            part: 'NocVi Impeller Housing v2',
+            vendor: 'Supplier A Fabrication',
+            part: 'Impeller Housing v2',
             cost: 4200,
           },
           createdAt: '10:45 AM',
         },
         {
           type: 'approval_card',
-          id: 'appr_gbrc_email',
-          actionId: 'appr_gbrc_email',
+          id: 'appr_instrument_email',
+          actionId: 'appr_instrument_email',
           botId: 'helix',
           service: 'GMAIL',
           operationType: 'GMAIL_DRAFT',
-          title: 'Draft Inquiry: GBRC Illumina MiSeq Flowcell Slot',
-          previewText: 'Send formal slot inquiry to Gujarat Biotechnology Research Centre (GBRC) instrumentation facility for 16S amplicon sequencing.',
+          title: 'Draft Inquiry: High-Throughput Sequencing Facility Slot',
+          previewText: 'Send formal slot inquiry to external instrumentation facility for 16S amplicon sequencing.',
           diffPreview: {
-            after: 'To: seq-facility@gbrc.res.in\nSubject: Slot Request: 16S rRNA eDNA Sequencing (Mahi River Sediment Samples)',
+            after: 'To: lab-facility@example.org\nSubject: Slot Request: 16S rRNA Amplicon Sequencing',
           },
           status: 'PENDING',
           targetPayload: {
-            recipient: 'seq-facility@gbrc.res.in',
-            subject: 'Slot Request: 16S rRNA eDNA Sequencing',
+            recipient: 'lab-facility@example.org',
+            subject: 'Slot Request: 16S rRNA Amplicon Sequencing',
           },
           createdAt: '11:15 AM',
         },

@@ -1,6 +1,6 @@
 {
-  "name": "HariomBot",
-  "description": "Personal always-on AI agent workspace with specialized teammates (Atlas, Reactor, Helix, Pulse, Forge) for biotech, research, content, and workspace automation.",
+  "name": "HBot",
+  "description": "Personal always-on multi-agent workspace with specialized AI teammates (Atlas, Reactor, Helix, Pulse, Forge) for engineering, research, and productivity automation.",
   "requestFramePermissions": [
     "microphone"
   ],

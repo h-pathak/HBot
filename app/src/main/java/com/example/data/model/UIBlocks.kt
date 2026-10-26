@@ -9,7 +9,7 @@ data class BentoPriorityItem(
 )
 
 data class BentoBriefing(
-    val greeting: String = "Good morning, Hariom 🌿",
+    val greeting: String = "Good morning 🌿",
     val dateText: String = "Today · Asia/Kolkata",
     val schedulePriority: BentoPriorityItem,
     val emailPriority: BentoPriorityItem,
@@ -26,7 +26,7 @@ data class PortalChecklistItem(
 
 data class PortalTakeoverCard(
     val id: String,
-    val portalName: String, // "I-STEM Analytical Facility" or "GBRC Sequencing" or "Editorial Manager"
+    val portalName: String, // "External Instrument Facility" or "Sequencing Portal"
     val purpose: String,
     val loginUrl: String,
     val credentialHint: String,

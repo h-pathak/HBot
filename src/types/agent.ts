@@ -1,6 +1,6 @@
 /**
- * HBot v2 (HariomBot) Multi-Agent UI Protocol & Structured Components
- * Tailored for Hariom Pathak (NocVita, MSU Baroda, Content Creator)
+ * HBot v2 Multi-Agent UI Protocol & Structured Components
+ * Tailored for technical founders, researchers, and creators
  */
 
 export type BotId = 'atlas' | 'reactor' | 'helix' | 'pulse' | 'forge';
@@ -160,7 +160,7 @@ export interface VendorQuote {
 }
 
 /**
- * Side-by-side RFQ Vendor Scorecard (e.g. SLA 3D printing for NocVi PBR)
+ * Side-by-side RFQ Vendor Scorecard (e.g. SLA 3D printing for hardware prototype)
  */
 export interface VendorScorecardBlock extends BaseUIBlock {
   type: 'vendor_scorecard';

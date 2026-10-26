@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ViewSidebar
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material3.*
@@ -34,10 +35,12 @@ fun TopRosterBar(
     selectedChannelId: String,
     isNightMode: Boolean,
     isStudioMode: Boolean,
+    userSubtitle: String = "Multi-Agent Workspace",
     onSelectChannel: (String) -> Unit,
     onToggleTheme: () -> Unit,
     onToggleStudioMode: () -> Unit,
     onOpenVoiceCall: () -> Unit,
+    onOpenVault: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val theme = LocalCozyTheme.current
@@ -95,11 +98,13 @@ fun TopRosterBar(
                             }
                         }
                         Text(
-                            text = "NocVita & MSU Baroda",
+                            text = userSubtitle,
                             style = MaterialTheme.typography.labelSmall.copy(
                                 color = theme.textSecondary,
                                 fontSize = 10.sp
-                            )
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -109,6 +114,24 @@ fun TopRosterBar(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
+                    // Private Vault Button
+                    IconButton(
+                        onClick = onOpenVault,
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(theme.cardSurface)
+                            .border(0.8.dp, theme.cardBorder, CircleShape)
+                            .testTag("private_vault_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = "Private Vault",
+                            tint = theme.accentPrimary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+
                     // Studio Mode Toggle
                     IconButton(
                         onClick = onToggleStudioMode,

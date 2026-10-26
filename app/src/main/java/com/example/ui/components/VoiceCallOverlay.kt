@@ -59,11 +59,11 @@ fun VoiceCallOverlay(
     )
 
     val quickVoicePrompts = listOf(
-        "Atlas, run 8:30 AM workspace briefing",
-        "Reactor, check SSIP 2.0 Vexma quotes",
-        "Helix, check I-STEM ICP-MS booking slots",
-        "Pulse, outline Friday microalgae blog draft",
-        "Forge, calculate oscillatory flow Reynolds number"
+        "Atlas, run morning workspace briefing",
+        "Reactor, check fabrication supplier quotes",
+        "Helix, check analytical instrument booking slots",
+        "Pulse, outline weekly publication draft",
+        "Forge, calculate fluidic Reynolds number"
     )
 
     Box(
@@ -154,7 +154,7 @@ fun VoiceCallOverlay(
             Spacer(modifier = Modifier.height(18.dp))
 
             Text(
-                text = if (isSpeaking) "HBot Speaking..." else "Listening to Hariom...",
+                text = if (isSpeaking) "HBot Speaking..." else "Listening...",
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
                     color = theme.textPrimary
@@ -174,7 +174,7 @@ fun VoiceCallOverlay(
                     .padding(horizontal = 8.dp)
             ) {
                 Text(
-                    text = if (transcript.isNotBlank()) transcript else "Ask anything regarding NocVita, SSIP 2.0 grants, MSU Baroda labs, or content...",
+                    text = if (transcript.isNotBlank()) transcript else "Ask anything regarding hardware prototyping, research, articles, or code...",
                     style = MaterialTheme.typography.bodyMedium.copy(
                         color = if (transcript.isNotBlank()) theme.textPrimary else theme.textSecondary,
                         textAlign = TextAlign.Center

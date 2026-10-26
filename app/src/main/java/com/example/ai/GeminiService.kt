@@ -2,7 +2,7 @@ package com.example.ai
 
 import com.example.BuildConfig
 import com.example.data.model.*
-import com.example.data.repository.HariomBotRepository
+import com.example.data.vault.PrivateVaultProfile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -28,7 +28,8 @@ class GeminiService {
         userPrompt: String,
         conversationHistory: List<ChatMessage>,
         dailyScheduleId: String,
-        contentScheduleId: String
+        contentScheduleId: String,
+        vaultProfile: PrivateVaultProfile = PrivateVaultProfile()
     ): AgentReplyResult = withContext(Dispatchers.IO) {
         val apiKey = try {
             BuildConfig.GEMINI_API_KEY
@@ -39,13 +40,13 @@ class GeminiService {
         // Check if user entered a slash command
         val trimmed = userPrompt.trim()
         if (trimmed.startsWith("/")) {
-            return@withContext handleSlashCommand(trimmed, botId, dailyScheduleId, contentScheduleId)
+            return@withContext handleSlashCommand(trimmed, botId, dailyScheduleId, contentScheduleId, vaultProfile)
         }
 
         // If API key is valid, call real Gemini 2.5 Flash
         if (apiKey.isNotBlank() && apiKey != "MY_GEMINI_API_KEY") {
             try {
-                val realReply = callGeminiRest(apiKey, botId, userPrompt, conversationHistory)
+                val realReply = callGeminiRest(apiKey, botId, userPrompt, conversationHistory, vaultProfile)
                 if (realReply.isNotBlank()) {
                     return@withContext parseAgentOutput(botId, realReply)
                 }
@@ -54,34 +55,35 @@ class GeminiService {
             }
         }
 
-        // Intelligent Domain-Specific Reasoning Engine for Hariom Pathak
-        return@withContext generateDomainReply(botId, userPrompt, dailyScheduleId, contentScheduleId)
+        // Resilient Domain-Specific Reasoning Engine with dynamic user context injection
+        return@withContext generateDomainReply(botId, userPrompt, dailyScheduleId, contentScheduleId, vaultProfile)
     }
 
     private fun callGeminiRest(
         apiKey: String,
         botId: String,
         prompt: String,
-        history: List<ChatMessage>
+        history: List<ChatMessage>,
+        vaultProfile: PrivateVaultProfile
     ): String {
         val botConfig = Bot.ROSTER.find { it.id == botId } ?: Bot.ROSTER[0]
         val endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$apiKey"
 
         val rootJson = JSONObject()
 
-        // System Instruction
+        // System Instruction - Zero PII hardcoded, injected dynamically from Private Vault
         val sysInstructionObj = JSONObject()
         val sysPartsArray = JSONArray()
         sysPartsArray.put(JSONObject().put("text", """
             ${botConfig.systemPrompt}
             
-            You are operating within HBot v2 (HariomBot) on Hariom Pathak's device.
-            User Profile: Hariom Pathak, founder of NocVita (NocVi Bioluminescent Photobioreactor, SSIP 2.0 Grant Ref: 532, ₹2,48,000, STBI Savli incubation), B.Sc. Hons. Microbiology researcher at MSU Baroda (The Geometric-Information Limit, riverine AMR with mean MAR = 0.29, sedimentary eDNA for INQUA 2027), and content creator in Vadodara, Gujarat.
-            Connected Sheets: Daily Schedule (${HariomBotRepository.DAILY_SCHEDULE_SHEET_ID}), Content Schedule (${HariomBotRepository.CONTENT_SCHEDULE_SHEET_ID}).
-            Rules:
-            1. Autonomous reads for Gmail, Sheets, Calendar, Drive.
-            2. Strict Read vs Write Security Boundary: all outbound emails, sheet updates, and calendar bookings must pause for human approval.
-            3. Ground answers with specific numbers, vendor names (Vexma, Soch3D, Trident), and academic citations.
+            You are operating within HBot v2 (Multi-Agent Workspace).
+            ${vaultProfile.toSystemPromptContext()}
+            
+            Security & Execution Rules:
+            1. Autonomous reads for connected workspace services (inbox, spreadsheets, calendar, storage).
+            2. Strict Read vs Write Security Boundary: all mutating actions (sending emails, modifying spreadsheets, scheduling calendar events) must pause and emit an approval action.
+            3. Ground answers with realistic technical calculations, itemized supplier comparisons, and verified research citations.
         """.trimIndent()))
         sysInstructionObj.put("parts", sysPartsArray)
         rootJson.put("systemInstruction", sysInstructionObj)
@@ -99,6 +101,7 @@ class GeminiService {
             contentsArray.put(turnObj)
         }
 
+        // Current turn
         val currentTurn = JSONObject()
         currentTurn.put("role", "user")
         val currentParts = JSONArray()
@@ -108,85 +111,119 @@ class GeminiService {
 
         rootJson.put("contents", contentsArray)
 
-        val genConfig = JSONObject()
-        genConfig.put("temperature", 0.7)
-        genConfig.put("topP", 0.95)
-        rootJson.put("generationConfig", genConfig)
+        // Add Google Search tool grounding
+        val toolsArray = JSONArray()
+        val googleSearchObj = JSONObject()
+        googleSearchObj.put("google_search", JSONObject())
+        toolsArray.put(googleSearchObj)
+        rootJson.put("tools", toolsArray)
 
+        val requestBody = rootJson.toString().toRequestBody(jsonMediaType)
         val request = Request.Builder()
             .url(endpoint)
-            .post(rootJson.toString().toRequestBody(jsonMediaType))
+            .post(requestBody)
             .build()
 
         client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) return ""
-            val responseBody = response.body?.string() ?: return ""
-            val json = JSONObject(responseBody)
-            val candidates = json.optJSONArray("candidates") ?: return ""
-            if (candidates.length() > 0) {
-                val firstCandidate = candidates.getJSONObject(0)
-                val contentObj = firstCandidate.optJSONObject("content")
-                val parts = contentObj?.optJSONArray("parts")
-                if (parts != null && parts.length() > 0) {
-                    return parts.getJSONObject(0).optString("text", "")
+            if (!response.isSuccessful) {
+                return ""
+            }
+            val respBody = response.body?.string() ?: return ""
+            val respJson = JSONObject(respBody)
+            val candidates = respJson.optJSONArray("candidates") ?: return ""
+            if (candidates.length() == 0) return ""
+
+            val firstCandidate = candidates.getJSONObject(0)
+            val content = firstCandidate.optJSONObject("content") ?: return ""
+            val parts = content.optJSONArray("parts") ?: return ""
+            if (parts.length() == 0) return ""
+
+            val textSb = StringBuilder()
+            for (i in 0 until parts.length()) {
+                val part = parts.getJSONObject(i)
+                val partText = part.optString("text", "")
+                if (partText.isNotBlank()) {
+                    textSb.append(partText)
                 }
             }
+            return textSb.toString()
         }
-        return ""
     }
 
     private fun handleSlashCommand(
         cmd: String,
         botId: String,
         dailyScheduleId: String,
-        contentScheduleId: String
+        contentScheduleId: String,
+        vaultProfile: PrivateVaultProfile
     ): AgentReplyResult {
+        val userName = vaultProfile.displayName.ifBlank { "User" }
+        val orgLab = vaultProfile.organizationOrLab.ifBlank { "R&D Lab" }
+
         return when {
             cmd.startsWith("/brief") -> {
                 val bento = BentoBriefing(
-                    greeting = "Good morning, Hariom 🌿",
-                    dateText = "Active Workspace Sweep · Asia/Kolkata",
-                    schedulePriority = BentoPriorityItem("MSU Microbiology Lab", "3:30 PM today · OD & sampling", "🔬", "Priority"),
-                    emailPriority = BentoPriorityItem("SSIP Vendor Quotes", "Vexma & Trident proformas ready", "📬", "3 Unread"),
-                    grantLabPriority = BentoPriorityItem("SSIP 2.0 (Ref: 532)", "₹2,48,000 grant · Month-1: ₹60,000", "🌱", "Approved"),
-                    contentPriority = BentoPriorityItem("Week 43 Content", "Bioluminescent microalgae thesis", "✍️", "Thu Cycle")
+                    greeting = "Good morning, $userName 🌿",
+                    dateText = "Autonomous Workspace Sweep",
+                    schedulePriority = BentoPriorityItem(
+                        title = "Laboratory & Research Slot",
+                        subtitle = "3:30 PM - 5:30 PM · Culture monitoring & analysis",
+                        iconEmoji = "🔬",
+                        badge = "High Priority"
+                    ),
+                    emailPriority = BentoPriorityItem(
+                        title = "Supplier Quotes Triaged",
+                        subtitle = "Reviewed proforma estimates for prototype components",
+                        iconEmoji = "📬",
+                        badge = "Needs Review"
+                    ),
+                    grantLabPriority = BentoPriorityItem(
+                        title = "R&D Prototyping Allocation",
+                        subtitle = "Budget milestone active · Prototype fabrication underway",
+                        iconEmoji = "🌱",
+                        badge = "Active"
+                    ),
+                    contentPriority = BentoPriorityItem(
+                        title = "Weekly Publication Pipeline",
+                        subtitle = "Technical brief outline scheduled for Google Docs",
+                        iconEmoji = "✍️",
+                        badge = "Weekly Cycle"
+                    )
                 )
                 AgentReplyResult(
-                    replyText = "🌿 **Atlas:** Generated updated morning Bento briefing. Schedule, grant milestones, and content pipeline are synchronized.",
+                    replyText = "🌿 **Atlas (Chief of Staff):** Generated on-demand Bento Briefing for your workspace:",
                     bentoBriefing = bento,
-                    stepsUsed = listOf("Checked Daily Schedule Sheet", "Verified SSIP 2.0 grant ledger", "Polled unread supplier threads"),
+                    stepsUsed = listOf("Scanned workspace inboxes", "Triaged daily calendar appointments", "Checked active project milestones"),
                     citationChips = listOf(
-                        CitationChip("Daily Schedule Sheet", "Sheet", dailyScheduleId),
-                        CitationChip("SSIP Grant Ledger", "Doc", "Ref: 532"),
-                        CitationChip("Trident Proforma", "Mail", "thread-789")
+                        CitationChip("Daily Schedule", "Sheet", dailyScheduleId.ifBlank { "Vault Config" }),
+                        CitationChip("Calendar", "Calendar", "cal-sync")
                     )
                 )
             }
             cmd.startsWith("/grant") -> {
                 AgentReplyResult(
-                    replyText = "🌱 **Reactor & Atlas:** SSIP 2.0 Grant Status Report:\n\n" +
-                            "• **Grant Sanction:** ₹2,48,000 approved at MSU Baroda (Ref: SSIP 2.0/2026-27/532).\n" +
-                            "• **Project Title:** *Bioluminescent Photobioreactor (NocVi)* with co-innovator Arnav Dhamdhere & mentor Dr. Devarshi Gajjar.\n" +
-                            "• **Incubation:** STBI Savli incubation active; industrial problem validation from Sandoz Agri-India.\n" +
-                            "• **Month-1 Tranche:** ₹60,000 prototyping allocation for borosilicate glass columns (OD 60mm) and 3D SLA helical baffles.",
-                    stepsUsed = listOf("Checked SSIP 2.0 Sanction documentation", "Cross-verified STBI Savli milestone checklist"),
+                    replyText = "🌱 **Reactor (Prototyping Lead):** Project Budget & Milestone Summary:\n\n" +
+                            "• **Status:** Prototyping grant active for fluidic column hardware.\n" +
+                            "• **Milestones:** Phase-1 fabrication underway with supplier quote reviews.\n" +
+                            "• **Current Tranche:** Prototyping allocation for borosilicate glass columns and 3D SLA helical baffles.",
+                    stepsUsed = listOf("Checked project sanction documentation", "Cross-verified milestone checklist"),
                     citationChips = listOf(
-                        CitationChip("SSIP 2.0 Sanction Ref 532", "Doc", "SSIP-MSU-532"),
-                        CitationChip("STBI Savli Agreement", "Doc", "STBI-Incubation")
+                        CitationChip("Grant Sanction", "Doc", "Project-Ref"),
+                        CitationChip("Milestone Checklist", "Doc", "Phase-1-Milestones")
                     )
                 )
             }
             cmd.startsWith("/boltz") -> {
                 AgentReplyResult(
                     replyText = "🧬 **Helix:** Biomolecular Modeling & Docking Pipeline:\n\n" +
-                            "• **Target:** Receptor-ligand synchronization modeling for compartmentalized microbial signaling.\n" +
-                            "• **Algorithms:** Boltz API (BoltzMol-1, BoltzProt-1) & AlphaFold Server.\n" +
-                            "• **Configuration:** Input FASTA sequences and ligand SMILES formatted in Google Keep for MSU Baroda thesis documentation.\n" +
+                            "• **Target:** Receptor-ligand synchronization modeling for microbial signaling.\n" +
+                            "• **Algorithms:** Structure prediction and molecular docking models.\n" +
+                            "• **Configuration:** Input FASTA sequences and ligand SMILES formatted in notes.\n" +
                             "• **Status:** Ready to queue computational runs via Forge Antigravity bridge.",
-                    stepsUsed = listOf("Loaded Boltz-1 FASTA template", "Checked AlphaFold server cluster status"),
+                    stepsUsed = listOf("Loaded FASTA template", "Checked modeling server cluster status"),
                     citationChips = listOf(
-                        CitationChip("Boltz Parameters", "Keep", "keep-boltz-1"),
-                        CitationChip("The Geometric-Information Limit", "Doc", "MSU-Paper-v4")
+                        CitationChip("Model Parameters", "Keep", "keep-params-1"),
+                        CitationChip("Research Paper", "Doc", "Paper-Draft")
                     )
                 )
             }
@@ -195,71 +232,71 @@ class GeminiService {
                     id = "appr-${System.currentTimeMillis()}",
                     requestingBotId = "reactor",
                     actionType = ApprovalType.GMAIL_DRAFT,
-                    title = "RFQ: 3D SLA Fluidic Baffles in Biocompatible Resin (SSIP 2.0)",
-                    targetSummary = "quotes@vexma.com, sales@soch3d.com",
-                    diffPreview = "+ Requested 15% student-startup rate\n+ Delivery location: Vadodara Hub",
-                    budgetTag = "SSIP 2.0 Month-1: ₹60,000",
+                    title = "RFQ: 3D SLA Fluidic Baffles in Biocompatible Resin",
+                    targetSummary = "quotes@supplier-a.example.com, sales@supplier-b.example.com",
+                    diffPreview = "+ Requested 15% startup/educational discount\n+ Delivery location: [Configured in Vault]",
+                    budgetTag = "Phase-1 Budget Tranche: ₹60,000",
                     fields = mapOf(
-                        "To" to "quotes@vexma.com",
-                        "Subject" to "RFQ: 3D SLA Fluidic Baffles in Biocompatible Resin - NocVi (SSIP 2.0)",
+                        "To" to "quotes@supplier-a.example.com",
+                        "Subject" to "RFQ: 3D SLA Fluidic Baffles in Biocompatible Resin (Prototype v2)",
                         "Material" to "Biocompatible Clear Photopolymer Resin (Autoclavable)",
                         "Quantity" to "12 Units (OD 54mm, pitch 45mm)",
-                        "Target Lead Time" to "3 business days to Vadodara",
-                        "Body" to "Dear Vexma Technologies Team,\n\nPlease provide quotation and lead time for 12 units of our fluidic baffle inserts (CAD attached). Student/startup discount applied under our MSU Baroda SSIP 2.0 grant.\n\nWarm regards,\nHariom Pathak"
+                        "Target Lead Time" to "3 business days",
+                        "Body" to "Dear Supplier Team,\n\nPlease provide quotation and lead time for 12 units of our fluidic baffle inserts (CAD attached). Educational/startup discount applied under our project grant.\n\nWarm regards,\n$userName\n$orgLab"
                     ),
                     createdAt = "Just now"
                 )
                 AgentReplyResult(
-                    replyText = "🫧 **Reactor:** Generated RFQ specifications for Vexma Technologies (Vadodara). Intercepted and placed into the **High-Fives Gate** for your authorization:",
+                    replyText = "🫧 **Reactor:** Generated RFQ specifications for shortlisted suppliers. Intercepted and placed into the **High-Fives Gate** for your authorization:",
                     approvalAction = approval,
-                    stepsUsed = listOf("Extracted CAD baffle tolerances", "Calculated Vadodara courier dispatch timeline"),
+                    stepsUsed = listOf("Extracted CAD baffle tolerances", "Calculated dispatch timeline"),
                     citationChips = listOf(
-                        CitationChip("Drive: Baffle_v3.cad", "Drive", "drive-baffle-3"),
-                        CitationChip("Vendor: Vexma", "Vendor", "vexma.com")
+                        CitationChip("CAD Model", "Drive", "baffle-v3.cad"),
+                        CitationChip("Supplier Catalog", "Vendor", "supplier-catalog")
                     )
                 )
             }
             cmd.startsWith("/content") -> {
                 AgentReplyResult(
-                    replyText = "🎧 **Pulse:** Content schedule activated for Thursday kickoff!\n\n" +
-                            "• **Anchor Topic:** *How Bioluminescent Microalgae Can Decentralize Urban Wastewater & Carbon Capture*\n" +
-                            "• **Key Evidence:** 3.4x mass transfer coefficient with oscillatory flow; 42% lower energy dissipation.\n" +
-                            "• **Content Flow:** Thursday outline -> Friday Google Doc draft (1,400 words) -> Saturday LinkedIn carousel -> Sunday 2 Reels.",
-                    stepsUsed = listOf("Read Content Schedule Google Sheet row 43", "Synthesized microalgae carbon capture statistics"),
+                    replyText = "🎧 **Pulse:** Content schedule activated for weekly cycle!\n\n" +
+                            "• **Anchor Topic:** *Bioprocess Engineering for Decentralized Water Remediation & Resource Recovery*\n" +
+                            "• **Key Evidence:** Enhanced mass transfer coefficient with oscillatory flow; lower energy dissipation.\n" +
+                            "• **Content Flow:** Topic outline -> Google Doc draft (1,400 words) -> Technical summary post -> Visual briefs.",
+                    stepsUsed = listOf("Read Content Schedule", "Synthesized bioprocess statistics"),
                     citationChips = listOf(
-                        CitationChip("Content Schedule Sheet", "Sheet", contentScheduleId)
+                        CitationChip("Content Schedule", "Sheet", contentScheduleId.ifBlank { "Vault Config" })
                     )
                 )
             }
             cmd.startsWith("/lab-check") -> {
                 val portalChecklist = PortalTakeoverCard(
                     id = "ptc-${System.currentTimeMillis()}",
-                    portalName = "I-STEM & GBRC Analytical Facility",
-                    purpose = "ICP-MS heavy metal run & MALDI-TOF sequencing verification",
-                    loginUrl = "https://istem-portal.gov.in",
-                    credentialHint = "MSU Baroda Microbiology Department Credentials",
+                    portalName = "Central Analytical Equipment Facility",
+                    purpose = "ICP-MS trace metal run & spectrometry verification",
+                    loginUrl = "https://external-portal.example.org",
+                    credentialHint = "Institutional Credentials: [Configured in Vault]",
                     checklist = listOf(
-                        PortalChecklistItem("step-1", "Open I-STEM portal in browser and complete CAPTCHA", isCompleted = false),
-                        PortalChecklistItem("step-2", "Select Instrument: High-Resolution ICP-MS", "ICP-MS HR", isCompleted = true),
-                        PortalChecklistItem("step-3", "Enter Project: SSIP 2.0/2026-27/532", "SSIP 2.0/2026-27/532", isCompleted = true),
+                        PortalChecklistItem("step-1", "Open portal in browser and complete CAPTCHA", isCompleted = false),
+                        PortalChecklistItem("step-2", "Select Instrument: High-Resolution Spectrometer", "HR-ICP-MS", isCompleted = true),
+                        PortalChecklistItem("step-3", "Enter Project Reference Code", "[Vault Ref]", isCompleted = true),
                         PortalChecklistItem("step-4", "Confirm proforma billing of ₹4,200", isCompleted = false)
                     )
                 )
                 AgentReplyResult(
-                    replyText = "🧬 **Helix:** Analytical slots checked across GBRC & I-STEM. Because portal authentication requires human CAPTCHA, here is your interactive takeover checklist:",
+                    replyText = "🧬 **Helix:** Analytical slots checked across external facilities. Because portal authentication requires human CAPTCHA, here is your interactive takeover checklist:",
                     portalTakeover = portalChecklist,
-                    stepsUsed = listOf("Queried I-STEM calendar", "Formatted MAR isolate protocol"),
+                    stepsUsed = listOf("Queried facility calendar", "Formatted sample preparation protocol"),
                     citationChips = listOf(
-                        CitationChip("I-STEM Portal", "Portal", "istem-portal.gov.in"),
-                        CitationChip("GBRC Portal", "Portal", "gbrc.res.in")
+                        CitationChip("Equipment Portal", "Portal", "instrument-portal"),
+                        CitationChip("Lab Database", "Portal", "analytical-db")
                     )
                 )
             }
             cmd.startsWith("/learn") -> {
                 val skillCard = SkillLearnedCard(
-                    slug = "pbr-oscillatory-shear-audit",
-                    title = "PBR Oscillatory Shear Rate Audit",
-                    summary = "Calculate fluid shear stresses and vortex formation in oscillatory baffled reactors.",
+                    slug = "fluidic-shear-audit",
+                    title = "Fluidic Shear Rate & Mixing Audit",
+                    summary = "Calculate fluid shear stresses and vortex formation in oscillatory column reactors.",
                     requiredTools = listOf("python_bioprocess_sim", "drive_export"),
                     triggerPattern = "When evaluating critical Reynolds number (Re_o > 300)",
                     savedAt = "Just now"
@@ -272,7 +309,7 @@ class GeminiService {
             }
             cmd.startsWith("/interview") -> {
                 AgentReplyResult(
-                    replyText = "🎙️ **Atlas (Business Context Operator):** Welcome to your weekly context interview! Tap **Tab 4 (Vault)** or answer right here:\n\n**Question 1:** What is our primary priority for the SSIP 2.0 Month-1 prototype assembly this week?"
+                    replyText = "🎙️ **Atlas (Business Context Operator):** Welcome to your workspace context interview! Tap **Tab 4 (Vault)** to update your on-device profile, or configure preferences right here."
                 )
             }
             else -> {
@@ -287,82 +324,85 @@ class GeminiService {
         botId: String,
         prompt: String,
         dailyScheduleId: String,
-        contentScheduleId: String
+        contentScheduleId: String,
+        vaultProfile: PrivateVaultProfile
     ): AgentReplyResult {
         val lower = prompt.lowercase()
+        val userName = vaultProfile.displayName.ifBlank { "User" }
+        val orgLab = vaultProfile.organizationOrLab.ifBlank { "R&D Lab" }
 
-        // Hardware / Vendor / NocVi
-        if (lower.contains("vendor") || lower.contains("pbr") || lower.contains("quote") || lower.contains("column") || lower.contains("glass") || lower.contains("nocvita") || lower.contains("baffle") || botId == "reactor") {
+        // Hardware / Vendor
+        if (lower.contains("vendor") || lower.contains("pbr") || lower.contains("quote") || lower.contains("column") || lower.contains("glass") || lower.contains("baffle") || botId == "reactor") {
             return if (lower.contains("email") || lower.contains("send") || lower.contains("rfq")) {
                 val approval = ApprovalAction(
                     id = "appr-${System.currentTimeMillis()}",
                     requestingBotId = "reactor",
                     actionType = ApprovalType.GMAIL_DRAFT,
-                    title = "RFQ: Borosilicate 3.3 Column (OD 60mm) - Trident Labortek",
-                    targetSummary = "sales@tridentlabortek.com",
-                    diffPreview = "+ Requested student-startup 15% discount under SSIP 2.0 Ref 532\n+ Vadodara direct courier delivery",
-                    budgetTag = "SSIP 2.0 Month-1 Allocation",
+                    title = "RFQ: Borosilicate 3.3 Column (OD 60mm) - Supplier A",
+                    targetSummary = "sales@supplier-a.example.com",
+                    diffPreview = "+ Requested startup/student 15% discount under project allocation\n+ Delivery location: [Configured in Private Vault]",
+                    budgetTag = "Project Prototyping Allocation",
                     fields = mapOf(
-                        "To" to "sales@tridentlabortek.com",
-                        "Subject" to "Quotation Confirmation: Borosilicate 3.3 Column - NocVi Prototype",
-                        "Body" to "Hello Sales Team,\n\nWe would like to confirm the order for two 60mm OD Borosilicate 3.3 columns under our MSU Baroda SSIP 2.0 grant. Please issue the GST invoice with delivery to our Vadodara lab.\n\nWarm regards,\nHariom Pathak\nNocVita"
+                        "To" to "sales@supplier-a.example.com",
+                        "Subject" to "Quotation Confirmation: Borosilicate 3.3 Column - Prototype Assembly",
+                        "Body" to "Hello Sales Team,\n\nWe would like to confirm the order for two 60mm OD Borosilicate 3.3 columns under our project grant. Please issue the GST invoice with delivery to our lab.\n\nWarm regards,\n$userName\n$orgLab"
                     ),
                     createdAt = "Just now"
                 )
                 AgentReplyResult(
-                    replyText = "🫧 **Reactor:** Prepared the vendor dispatch message for Trident Labortek. Gated in the **High-Fives (Approvals)** tab for your authorization:",
+                    replyText = "🫧 **Reactor:** Prepared the supplier dispatch message for Supplier A. Gated in the **High-Fives (Approvals)** tab for your authorization:",
                     approvalAction = approval,
-                    stepsUsed = listOf("Extracted Trident proforma quote #789", "Applied 15% SSIP student-startup discount"),
+                    stepsUsed = listOf("Extracted proforma quote", "Applied 15% startup/educational discount"),
                     citationChips = listOf(
-                        CitationChip("Trident Proforma", "Mail", "proforma-789"),
-                        CitationChip("NocVi CAD", "Drive", "cad-pbr-v3")
+                        CitationChip("Proforma Quote", "Mail", "proforma-quote"),
+                        CitationChip("CAD Specifications", "Drive", "cad-model-v3")
                     )
                 )
             } else {
                 AgentReplyResult(
-                    replyText = "🫧 **Reactor:** Cross-checked vendor quotes for NocVi's oscillatory column:\n\n" +
-                            "• **Trident Labortek:** Borosilicate 3.3 (Schott Duran, ISO 3585), ₹8,450 (15% student discount applied).\n" +
-                            "• **Vexma Technologies:** 3D SLA biocompatible resin baffles, ₹9,800.\n" +
-                            "• **Soch3D:** 8mm acrylic outer enclosure, ₹6,200.\n\n" +
-                            "All quotes fall within our ₹60,000 Month-1 SSIP 2.0 budget tranche.",
-                    stepsUsed = listOf("Queried Vexma, Soch3D, and Trident catalogs", "Verified SSIP budget ceiling"),
+                    replyText = "🫧 **Reactor:** Cross-checked supplier quotes for the fluidic column:\n\n" +
+                            "• **Supplier A Labortek:** Borosilicate 3.3 (ISO 3585), ₹8,450 (15% discount applied).\n" +
+                            "• **Supplier B Tech:** 3D SLA biocompatible resin baffles, ₹9,800.\n" +
+                            "• **Supplier C Acrylics:** 8mm acrylic outer enclosure, ₹6,200.\n\n" +
+                            "All quotes fall within our ₹60,000 Phase-1 budget tranche.",
+                    stepsUsed = listOf("Queried supplier catalogs", "Verified project budget ceiling"),
                     citationChips = listOf(
-                        CitationChip("Vendor Scorecard", "Scorecard", "pbr-scorecard"),
-                        CitationChip("SSIP Grant Ledger", "Doc", "Ref: 532")
+                        CitationChip("Vendor Scorecard", "Scorecard", "scorecard-v1"),
+                        CitationChip("Grant Ledger", "Doc", "Allocation-Phase-1")
                     )
                 )
             }
         }
 
-        // Research / Labs / AMR / Manuscripts
+        // Research / Labs / Manuscripts
         if (lower.contains("research") || lower.contains("stem") || lower.contains("lab") || lower.contains("paper") || lower.contains("manuscript") || lower.contains("amr") || botId == "helix") {
             return AgentReplyResult(
-                replyText = "🧬 **Helix:** Research update across MSU Baroda Microbiology:\n\n" +
-                        "1. **Riverine AMR Surveillance:** Mahi, Vishwamitri & Bhogavo rivers showed a mean MAR index of 0.29 across 14 MALDI-TOF isolates.\n" +
-                        "2. **Manuscript:** *The Geometric-Information Limit: Stochastic Synchronization in Compartmentalized Microbial Populations* is 'Under Review' on Nonlinear Science Editorial Manager.\n" +
-                        "3. **Analytical Facility:** ICP-MS heavy metal run slot open on Thursday morning via I-STEM (₹4,200 proforma).\n" +
-                        "4. **Conference:** XXII INQUA Congress 2027 sedimentary eDNA abstract submission milestone tracked.",
-                stepsUsed = listOf("Scanned GBRC MALDI-TOF isolate database", "Checked Editorial Manager review timeline"),
+                replyText = "🧬 **Helix:** Research update across laboratory projects:\n\n" +
+                        "1. **Environmental AMR Surveillance:** River sediment isolates showed a mean MAR index of 0.29 across analyzed sampling stations.\n" +
+                        "2. **Manuscript:** Research thesis on stochastic synchronization in compartmentalized populations is under review.\n" +
+                        "3. **Analytical Facility:** ICP-MS trace metal run slot open on Thursday morning via the central portal (₹4,200 proforma).\n" +
+                        "4. **Conference:** Sedimentary metagenomics abstract submission milestone tracked.",
+                stepsUsed = listOf("Scanned analytical spectra database", "Checked manuscript review timeline"),
                 citationChips = listOf(
-                    CitationChip("Editorial Manager: NS-2026", "Doc", "em-track"),
-                    CitationChip("I-STEM Portal", "Portal", "istem-portal"),
-                    CitationChip("MAR Surveillance Data", "Doc", "AMR-Report-2026")
+                    CitationChip("Manuscript Tracker", "Doc", "manuscript-review"),
+                    CitationChip("Analytical Portal", "Portal", "instrument-portal"),
+                    CitationChip("Surveillance Data", "Doc", "amr-report")
                 )
             )
         }
 
         // Content
-        if (lower.contains("content") || lower.contains("linkedin") || lower.contains("blog") || lower.contains("instagram") || botId == "pulse") {
+        if (lower.contains("content") || lower.contains("linkedin") || lower.contains("blog") || lower.contains("article") || botId == "pulse") {
             return AgentReplyResult(
-                replyText = "🎧 **Pulse:** Content schedule status for Week 43:\n\n" +
-                        "• **Thursday:** Primary research & outline complete on Content Schedule Sheet.\n" +
-                        "• **Friday:** Full 1,400-word Google Doc draft on bioluminescent microalgae for decentralized wastewater treatment.\n" +
-                        "• **Saturday:** 5-slide LinkedIn carousel breaking down oscillatory flow mixing vs bubble columns.\n" +
-                        "• **Sunday:** 2 Instagram Reels scripts on student biotech innovation in Gujarat.",
-                stepsUsed = listOf("Read Content Schedule Google Sheet row 43", "Synthesized LinkedIn carousel outline"),
+                replyText = "🎧 **Pulse:** Content schedule status for current cycle:\n\n" +
+                        "• **Stage 1:** Primary research & outline complete on Content Schedule Sheet.\n" +
+                        "• **Stage 2:** Full 1,400-word Google Doc draft on bioprocess engineering for wastewater remediation.\n" +
+                        "• **Stage 3:** Technical summary breakdown comparing oscillatory mixing vs conventional aeration.\n" +
+                        "• **Stage 4:** Visual media scripts on biotechnology innovations.",
+                stepsUsed = listOf("Read Content Schedule", "Synthesized technical outline"),
                 citationChips = listOf(
-                    CitationChip("Content Schedule Sheet", "Sheet", contentScheduleId),
-                    CitationChip("LinkedIn Drafts", "Doc", "doc-linkedin-w43")
+                    CitationChip("Content Schedule", "Sheet", contentScheduleId.ifBlank { "Vault Config" }),
+                    CitationChip("Article Drafts", "Doc", "doc-drafts")
                 )
             )
         }
@@ -370,7 +410,7 @@ class GeminiService {
         // Simulation / Code
         if (lower.contains("code") || lower.contains("python") || lower.contains("sim") || lower.contains("reynolds") || botId == "forge") {
             return AgentReplyResult(
-                replyText = "🤖 **Forge:** Bioprocess simulation code for NocVi oscillatory flow:\n\n" +
+                replyText = "🤖 **Forge:** Bioprocess simulation code for fluidic column mixing:\n\n" +
                         "```python\n" +
                         "import numpy as np\n" +
                         "# Oscillatory Flow Reynolds Number (Re_o)\n" +
@@ -379,12 +419,12 @@ class GeminiService {
                         "    velocity = 0.5 * omega * amplitude_m\n" +
                         "    return (density * velocity * diameter_m) / viscosity\n" +
                         "\n" +
-                        "# NocVi Column (D = 0.06m, f = 2.5Hz, x_o = 0.015m):\n" +
+                        "# Column Geometry (D = 0.06m, f = 2.5Hz, x_o = 0.015m):\n" +
                         "re_o = calc_re_o(998, 2.5, 0.015, 0.06, 0.001)\n" +
-                        "print(f'NocVi Re_o: {re_o:.1f}') # Yields 442.1 (Vortices active!)\n" +
+                        "print(f'Calculated Re_o: {re_o:.1f}') # Yields 442.1 (Vortices active!)\n" +
                         "```\n\n" +
                         "Ready to export straight to your GitHub repo and open in Google Antigravity.",
-                stepsUsed = listOf("Simulated vortex mechanics for D=60mm column", "Formatted Antigravity script"),
+                stepsUsed = listOf("Simulated vortex mechanics for fluidic column", "Formatted script"),
                 citationChips = listOf(
                     CitationChip("Antigravity Bridge", "Code", "antigravity.yaml")
                 )
@@ -395,15 +435,15 @@ class GeminiService {
         return AgentReplyResult(
             replyText = "🌟 **Atlas (Chief of Staff):** Received: \"$prompt\"\n\n" +
                     "I am coordinating your priorities:\n" +
-                    "• **Schedule:** Next event is 3:30 PM MSU Baroda Microbiology Lab.\n" +
-                    "• **Hardware:** @Reactor is managing Vexma & Trident RFQs under your SSIP 2.0 grant.\n" +
-                    "• **Research:** @Helix has prepared your I-STEM ICP-MS portal takeover checklist.\n" +
-                    "• **Content:** @Pulse has your Thursday blog draft on track.\n\n" +
-                    "Use `/brief`, `/grant`, `/rfq`, `/boltz`, or `/content` for instant execution.",
-            stepsUsed = listOf("Checked Daily Schedule Sheet", "Triaged active agent roster"),
+                    "• **Schedule:** Next event is 3:30 PM Laboratory Session.\n" +
+                    "• **Hardware:** @Reactor is managing supplier RFQs under your project grant.\n" +
+                    "• **Research:** @Helix has prepared your analytical equipment portal takeover checklist.\n" +
+                    "• **Content:** @Pulse has your weekly article draft on track.\n\n" +
+                    "Use `/brief`, `/grant`, `/rfq`, `/boltz`, or `/content` for instant execution, or tap 🔒 Vault to configure your profile.",
+            stepsUsed = listOf("Checked Daily Schedule", "Triaged active agent roster"),
             citationChips = listOf(
-                CitationChip("Daily Schedule Sheet", "Sheet", dailyScheduleId),
-                CitationChip("Google Calendar", "Calendar", "cal-sync")
+                CitationChip("Daily Schedule", "Sheet", dailyScheduleId.ifBlank { "Vault Config" }),
+                CitationChip("Calendar", "Calendar", "cal-sync")
             )
         )
     }

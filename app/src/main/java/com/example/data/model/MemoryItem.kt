@@ -2,7 +2,7 @@ package com.example.data.model
 
 enum class MemoryCategory(val label: String, val tag: String) {
     ALL("All Memories", "ALL"),
-    NOCVITA("NocVita & Biorefinery", "NOCVITA"),
+    HARDWARE_RND("Hardware & Prototyping", "HARDWARE"),
     RESEARCH_LABS("Research & Labs", "RESEARCH"),
     CONTENT("Content Pipeline", "CONTENT"),
     PERSONAL_PREFS("Personal & Preferences", "PREFS")

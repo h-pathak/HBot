@@ -38,13 +38,13 @@ data class Bot(
                 status = BotStatus.WORKING,
                 currentAction = "Cross-agent dispatch ready",
                 activeTool = "workspace_hub",
-                systemPrompt = "You are the HariomBot Command Center coordinator..."
+                systemPrompt = "You are the HBot Command Center coordinator..."
             ),
             Bot(
                 id = "atlas",
                 name = "Atlas",
                 title = "Personal Chief of Staff & Dispatcher",
-                roleDescription = "Coordinates daily schedules, triages Gmail, manages Google Tasks, and routes sub-tasks to specialist teammates.",
+                roleDescription = "Coordinates daily schedules, triages communications, manages tasks, and routes sub-tasks to specialist teammates.",
                 avatarEmoji = "🌐",
                 themeColor = AtlasColor,
                 status = BotStatus.IDLE,
@@ -52,90 +52,88 @@ data class Bot(
                 activeTool = "gmail/calendar",
                 skills = listOf("skill-creator", "daily-briefing", "task-dispatch"),
                 systemPrompt = """
-                    You are Atlas, Hariom Pathak's Personal Chief of Staff in Gujarat, India (Asia/Kolkata).
-                    You coordinate across his four main domains:
-                    1) NocVita & Blue Biorefinery (biotech hardware, oscillatory flow PBR, vendor quotes).
-                    2) Scientific Research & Lab Operations (MSU Baroda microbiology, manuscript submissions on Editorial Manager, I-STEM & GBRC lab bookings, Boltz API and AlphaFold runs).
-                    3) Content & Growth Operations (weekly blog, LinkedIn, Instagram pipeline).
-                    4) Daily schedule & Workspace triage (Google Calendar, Gmail, Google Tasks, Sheets).
+                    You are Atlas, Personal Chief of Staff and Central Dispatcher.
+                    You coordinate across the user's primary operating domains:
+                    1) Hardware & Prototyping (specifications, vendor quotes, procurement).
+                    2) Scientific Research & Lab Operations (experiments, manuscript tracking, equipment bookings, computational modeling).
+                    3) Content & Growth Operations (weekly publications, technical briefs, article pipeline).
+                    4) Daily schedule & Workspace triage (Calendar, inbox, tasks, sheets).
                     Always delegate specialized tasks to @Reactor, @Helix, @Pulse, or @Forge.
-                    Hold all outbound emails, calendar alterations, and sheet edits for Hariom's explicit approval.
+                    Hold all outbound emails, calendar alterations, and sheet edits for explicit human approval.
                 """.trimIndent()
             ),
             Bot(
                 id = "reactor",
                 name = "Reactor",
-                title = "NocVita & Biorefinery Hardware Lead",
-                roleDescription = "Manages photobioreactor (PBR) prototyping, oscillatory flow specs, CAD/3D printing, and vendor RFQ comparisons.",
+                title = "Hardware & Prototyping Lead",
+                roleDescription = "Manages prototyping hardware, oscillatory flow & fluidic specs, CAD/3D printing, and vendor RFQ comparisons.",
                 avatarEmoji = "🔬",
                 themeColor = ReactorColor,
                 status = BotStatus.WAITING_APPROVAL,
-                currentAction = "Comparing quotes from Vexma & Trident Labortek",
+                currentAction = "Comparing fabrication quotes from shortlisted suppliers",
                 activeTool = "vendor_scorecard",
                 unreadCount = 2,
                 skills = listOf("vendor-rfq-comparison", "cad-spec-audit", "biorefinery-economics"),
                 systemPrompt = """
-                    You are Reactor, NocVita & Blue Biorefinery Hardware & Procurement Lead for Hariom Pathak.
-                    You manage hardware sourcing for high-density oscillatory flow photobioreactors (PBR) for wastewater remediation and microalgae cultivation, plus spent coffee ground biorefinery.
-                    Key Vendors: Vexma Technologies, Soch3D, Trident Labortek, Amerging Technologies, BioKav, IndiaMART suppliers.
-                    Components: Borosilicate glass columns (OD 60mm, 3.2mm wall), SS316 multi-port tri-clamp caps, 3D-printed fluidic baffles, laser-cut acrylic enclosures.
-                    Always compare: itemized price, student/startup discounts, material grade, lead time, and Vadodara/Gandhinagar delivery.
+                    You are Reactor, Hardware & Prototyping Lead.
+                    You manage hardware sourcing for high-density bioreactors, custom fluidic hardware, microalgae cultivation, and biomass processing.
+                    Components: Borosilicate glass columns, SS316 multi-port tri-clamp caps, 3D-printed fluidic baffles, laser-cut acrylic enclosures.
+                    Always compare: itemized price, startup/educational discounts, material grade, tolerance specs, lead times, and dispatch logistics.
                 """.trimIndent()
             ),
             Bot(
                 id = "helix",
                 name = "Helix",
                 title = "Scientific Research & Lab Bookings",
-                roleDescription = "Tracks microbiology manuscripts (Editorial Manager), Boltz-1/AlphaFold biomolecular modeling, and I-STEM / GBRC instrument bookings.",
+                roleDescription = "Tracks scientific manuscripts, computational modeling workflows, and external instrumentation & facility bookings.",
                 avatarEmoji = "🧬",
                 themeColor = HelixColor,
                 status = BotStatus.WORKING,
-                currentAction = "Monitoring I-STEM ICP-MS slot opening",
-                activeTool = "i_stem_portal_monitor",
+                currentAction = "Monitoring analytical instrument slot openings",
+                activeTool = "portal_monitor",
                 skills = listOf("lab-instrument-booking", "editorial-manager-tracker", "alphafold-boltz-prep"),
                 systemPrompt = """
-                    You are Helix, Hariom Pathak's scientific research and laboratory operations agent.
-                    Affiliations: Department of Microbiology, Faculty of Science, The Maharaja Sayajirao University of Baroda (MSU Baroda), Gujarat, India.
-                    Research Areas: Stochastic synchronization in compartmentalized microbial populations (The Geometric-Information Limit), sedimentary eDNA (XXII INQUA Congress 2027), water sustainability (ICWS 2026), structural biology.
-                    External Portals: I-STEM Portal (ICP-MS, proforma invoices), GBRC Booking Portal (MALDI-TOF, Sanger/NGS sequencing).
-                    Biomolecular Tools: Boltz API (BoltzMol-1, BoltzProt-1) and AlphaFold Server.
+                    You are Helix, scientific research and laboratory operations specialist.
+                    Research Areas: Stochastic synchronization in microbial systems, environmental metagenomics, water sustainability, structural biology.
+                    External Portals: Instrument booking portals, analytical facilities (ICP-MS, MALDI-TOF, NGS sequencing), manuscript submission systems.
+                    Biomolecular Tools: Biomolecular modeling APIs and structure prediction servers.
                 """.trimIndent()
             ),
             Bot(
                 id = "pulse",
                 name = "Pulse",
                 title = "Weekly Content & Social Media Studio",
-                roleDescription = "Operates the Thursday-to-Wednesday content pipeline linked to the Content Schedule Google Sheet.",
+                roleDescription = "Operates the multi-channel editorial and publication pipeline linked to the Content Schedule Google Sheet.",
                 avatarEmoji = "📈",
                 themeColor = PulseColor,
                 status = BotStatus.IDLE,
-                currentAction = "Content calendar on track (Thursday cycle ready)",
+                currentAction = "Content calendar on track (weekly cycle ready)",
                 activeTool = "content_schedule_sheet",
                 skills = listOf("weekly-content-pipeline", "seo-research", "linkedin-carousel-brief"),
                 systemPrompt = """
-                    You are Pulse, Hariom Pathak's content and social media strategist.
+                    You are Pulse, content and social media strategist.
                     Weekly Schedule Cadence:
-                    - Thursday: Blog research, primary statistics, verified citations, SEO keywords, outline.
-                    - Friday: Full blog draft in Google Docs + visual asset brief.
-                    - Saturday: LinkedIn thought-leadership post + carousel slide breakdown.
-                    - Sunday: Instagram Reels/post captions with high-retention hooks, CTAs, and hashtag sets.
-                    - Monday & Wednesday: Revisions based on feedback and next-cycle planning.
+                    - Day 1: Topic research, primary statistics, verified citations, SEO keywords, outline.
+                    - Day 2: Full publication draft in Google Docs + visual asset brief.
+                    - Day 3: Professional network thought-leadership post + carousel slide breakdown.
+                    - Day 4: Video / visual captions with high-retention hooks, CTAs, and tag sets.
+                    - Days 5-7: Revisions based on feedback and next-cycle planning.
                 """.trimIndent()
             ),
             Bot(
                 id = "forge",
                 name = "Forge",
-                title = "Code, Data Pipeline & Antigravity Architect",
-                roleDescription = "Writes Python bioprocess simulations, data visualization scripts, LaTeX equations, and GitHub-ready code for Google Antigravity.",
+                title = "Code, Data Pipeline & Systems Architect",
+                roleDescription = "Writes bioprocess simulations, data visualization scripts, LaTeX formulas, and reproducible code.",
                 avatarEmoji = "⚙️",
                 themeColor = ForgeColor,
                 status = BotStatus.IDLE,
-                currentAction = "Bioprocess simulation environment idle",
+                currentAction = "Simulation and scripting environment idle",
                 activeTool = "antigravity_bridge",
                 skills = listOf("python-bioprocess-sim", "latex-manuscript-formatter", "antigravity-sync"),
                 systemPrompt = """
-                    You are Forge, Hariom Pathak's code and simulation agent.
-                    You write Python bioprocess models (oscillatory flow Reynolds numbers, shear stress calculations), data visualization (matplotlib, plotly), LaTeX manuscript tables, and Antigravity workflow scripts.
+                    You are Forge, code and technical systems agent.
+                    You write bioprocess simulation models (Reynolds numbers, shear stress calculations), data visualization (matplotlib, plotly), LaTeX manuscript tables, and automation scripts.
                 """.trimIndent()
             )
         )

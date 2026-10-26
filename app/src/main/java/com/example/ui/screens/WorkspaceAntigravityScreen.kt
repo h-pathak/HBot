@@ -236,36 +236,36 @@ fun WorkspaceAntigravityScreen(
 
                         val previewContent = when (activeBridgeTab) {
                             "AGENTS.md" -> """
-                                # HBot Agent Roster (h-pathak/HBot)
-                                - Atlas (chief-of-staff): Personal Chief of Staff & Dispatcher
-                                - Reactor (nocvita-ops): NocVita & Biorefinery Hardware Lead
-                                - Helix (bio-researcher): Scientific Research & Lab Bookings (MSU Baroda)
-                                - Pulse (content-studio): Weekly Content & Social Media Studio
-                                - Forge (antigravity-coder): Bioprocess Simulations & Antigravity Bridge
+                                # HBot Agent Roster
+                                - Atlas (chief-of-staff): Personal Chief of Staff & Central Dispatcher
+                                - Reactor (hardware-ops): Hardware & Prototyping Lead
+                                - Helix (research-lead): Scientific Research & Instrumentation Specialist
+                                - Pulse (content-studio): Weekly Content & Publication Studio
+                                - Forge (systems-coder): Bioprocess Simulations & Code Architect
                             """.trimIndent()
                             "MEMORY.md" -> """
                                 # HBot Learned Memory Bank
-                                - Founder: Hariom Pathak (NocVita, Vadodara, Gujarat)
-                                - Grant: Approved ₹2,48,000 SSIP 2.0 (Ref: SSIP 2.0/2026-27/532) at MSU Baroda
-                                - Research: Stochastic synchronization & Riverine AMR (mean MAR = 0.29)
-                                - Hardware: Borosilicate 3.3 (OD 60mm), SS316 tri-clamp, 3D SLA baffles
-                                - Sheets: Daily (1hqA9A...) & Content (1XpHiW...)
+                                - User Context: Dynamically injected from Private Vault
+                                - Project: Hardware prototyping and fabrication budget tracking
+                                - Research: Metagenomics & stochastic microbial population analysis
+                                - Hardware: Custom fluidic column (Borosilicate, SS316, 3D SLA baffles)
+                                - Sheets: Daily & Content Schedule (configurable on-device)
                             """.trimIndent()
                             "agents.yaml" -> """
                                 agents:
                                   - id: chief-of-staff
                                     name: Atlas
-                                    skills: [vendor-rfq-comparison, istem-gbrc-slot-prep]
-                                  - id: nocvita-ops
+                                    skills: [vendor-rfq-comparison, portal-slot-prep]
+                                  - id: hardware-ops
                                     name: Reactor
-                                    skills: [vendor-rfq-comparison, ssip-bill-compliance]
-                                  - id: bio-researcher
+                                    skills: [vendor-rfq-comparison, grant-bill-compliance]
+                                  - id: research-lead
                                     name: Helix
-                                    skills: [istem-gbrc-slot-prep, boltz-alphafold-prep]
+                                    skills: [portal-slot-prep, biomolecular-modeling-prep]
                                   - id: content-studio
                                     name: Pulse
                                     skills: [weekly-content-cycle]
-                                  - id: antigravity-coder
+                                  - id: systems-coder
                                     name: Forge
                                     skills: [python-bioprocess-sim]
                             """.trimIndent()
@@ -273,14 +273,14 @@ fun WorkspaceAntigravityScreen(
                                 skills:
                                   - slug: vendor-rfq-comparison
                                     title: Multi-Vendor RFQ & Quote Comparison
-                                  - slug: ssip-bill-compliance
-                                    title: SSIP 2.0 Bill & Voucher Compliance
-                                  - slug: istem-gbrc-slot-prep
-                                    title: I-STEM & GBRC Instrument Slot Prep
+                                  - slug: grant-bill-compliance
+                                    title: Project Bill & Voucher Compliance
+                                  - slug: portal-slot-prep
+                                    title: Analytical Equipment Slot Prep
                                   - slug: weekly-content-cycle
-                                    title: Weekly Content Cycle (Blog, LinkedIn, Instagram)
-                                  - slug: boltz-alphafold-prep
-                                    title: Boltz API & AlphaFold Biomolecular Modeling
+                                    title: Weekly Content Cycle (Blog, Professional Post, Media)
+                                  - slug: biomolecular-modeling-prep
+                                    title: Biomolecular Modeling & Structure Prep
                             """.trimIndent()
                         }
 

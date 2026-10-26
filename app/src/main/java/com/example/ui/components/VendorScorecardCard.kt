@@ -55,7 +55,7 @@ fun VendorScorecardCard(
                         .padding(horizontal = 7.dp, vertical = 3.dp)
                 ) {
                     Text(
-                        text = "Vadodara / Gujarat",
+                        text = "Shortlisted Suppliers",
                         color = ReactorPrimary,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold

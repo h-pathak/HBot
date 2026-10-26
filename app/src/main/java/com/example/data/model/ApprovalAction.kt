@@ -4,7 +4,7 @@ enum class ApprovalType(val label: String, val badgeColorHex: Long) {
     GMAIL_DRAFT("Gmail Outbound Draft", 0xFFEA4335),
     SHEET_ROW_UPDATE("Google Sheet Row Update", 0xFF10B981),
     CALENDAR_SLOT("Calendar Slot Reservation", 0xFF4285F4),
-    GRANT_DOC_NOTE("SSIP 2.0 Grant Doc Note", 0xFF8B5CF6),
+    GRANT_DOC_NOTE("Project / Grant Ledger Note", 0xFF8B5CF6),
     TASK_DELETE("Google Task Action", 0xFFF59E0B)
 }
 

@@ -22,6 +22,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "HariomBot"
+rootProject.name = "HBot"
 
 include(":app")

@@ -21,7 +21,7 @@ val PastelPeach = Color(0xFFFFEDD5)
 val PastelAqua = Color(0xFFE0F2FE)
 
 // ==========================================
-// "BIOLUMINESCENT NIGHT" THEME (NocVi Algae)
+// "BIOLUMINESCENT NIGHT" THEME (Bioluminescent Glow)
 // ==========================================
 val VelvetMidnightBg = Color(0xFF0B101B)
 val ObsidianGlassCard = Color(0xFF131B2E)
